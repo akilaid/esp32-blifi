@@ -1,0 +1,23 @@
+name: blifi
+description: >-
+  BLE-based Wi-Fi provisioning for ESP32. Provision Wi-Fi credentials to an
+  ESP32 over an encrypted Bluetooth Low Energy session (X25519 + AES-256-GCM),
+  interoperating with the blifi firmware component.
+version: 0.1.0
+repository: https://github.com/OWNER/esp32-blifi
+homepage: https://github.com/OWNER/esp32-blifi
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.16.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_blue_plus: ^1.32.0
+  cryptography: ^2.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
