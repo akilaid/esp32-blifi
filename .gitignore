@@ -8,9 +8,33 @@ docs/plan.md
 # macOS
 .DS_Store
 
-# ESP-IDF build artifacts
+# Logs
+*.log
+
+# Build output (ESP-IDF, Flutter, Gradle all use build/)
 build/
+
+# ESP-IDF
 sdkconfig
 sdkconfig.old
 managed_components/
 dependencies.lock
+
+# Flutter / Dart (later phases)
+.dart_tool/
+.packages
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Android (Flutter app)
+**/android/.gradle/
+**/android/local.properties
+**/android/key.properties
+*.keystore
+*.jks
+
+# Editors / IDE
+.idea/
+.vscode/
+*.iml
