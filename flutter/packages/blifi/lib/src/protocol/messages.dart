@@ -2,35 +2,13 @@
 /// match the firmware's fields. Encoding uses dart:convert.
 library;
 
+// Internal implementation; the documented public API lives in lib/blifi.dart.
+// ignore_for_file: public_member_api_docs
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../models/wifi_network.dart';
 import 'constants.dart';
-
-/// A Wi-Fi network from a scan response (§6.3).
-class WifiNetwork {
-  WifiNetwork({
-    required this.ssid,
-    required this.rssi,
-    required this.authMode,
-    required this.channel,
-    required this.hidden,
-  });
-
-  final String ssid;
-  final int rssi;
-  final int authMode; // ESP-IDF wifi_auth_mode_t
-  final int channel;
-  final bool hidden;
-
-  factory WifiNetwork.fromJson(Map<String, dynamic> j) => WifiNetwork(
-        ssid: (j['ssid'] ?? '') as String,
-        rssi: (j['rssi'] ?? 0) as int,
-        authMode: (j['auth'] ?? 0) as int,
-        channel: (j['channel'] ?? 0) as int,
-        hidden: (j['hidden'] ?? false) as bool,
-      );
-}
 
 /// Device-Info payload (§6.1).
 class DeviceInfo {

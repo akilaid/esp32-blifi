@@ -1,6 +1,9 @@
 /// Protocol constants mirroring docs/protocol-spec.md. MUST match the firmware.
 library;
 
+// Internal implementation; the documented public API lives in lib/blifi.dart.
+// ignore_for_file: public_member_api_docs
+
 /// Protocol version byte present in every frame header.
 const int kProtocolVersion = 0x01;
 

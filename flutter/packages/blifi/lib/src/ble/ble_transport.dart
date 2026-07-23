@@ -2,6 +2,8 @@
 /// frame/chunk writes, and reassemble inbound notifications per characteristic.
 library;
 
+// Internal implementation; the documented public API lives in lib/blifi.dart.
+// ignore_for_file: public_member_api_docs
 import 'dart:async';
 import 'dart:typed_data';
 

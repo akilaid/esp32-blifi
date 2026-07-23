@@ -4,9 +4,17 @@ All notable changes to the Flutter package are documented here. Format based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this package is
 versioned independently under [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## 0.1.0 - 2026-07-23
+
+Initial release.
 
 ### Added
+- Public API (`package:blifi/blifi.dart`): `BlifiProvisioning`
+  (`scanForDevices`, `connect`) and `BlifiProvisioningSession`
+  (`scanWifiNetworks`, `sendCredentials`, `statusStream`, `disconnect`), with
+  models (`BlifiDevice`, `WifiNetwork`/`WifiAuthMode`, `ProvisioningStatus`/
+  `ProvisioningState`, `BlifiDeviceInfo`) and a typed exception hierarchy
+  (`BlifiException` and subtypes). Fully dartdoc'd.
 - Package core (`lib/src`), the Dart mirror of the firmware:
   - `protocol`: framing (8-byte big-endian header, chunking, reassembly), the
     JSON payload codecs, and shared constants/status codes.

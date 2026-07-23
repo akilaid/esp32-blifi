@@ -27,7 +27,7 @@ void main() {
     final x = X25519();
     final scalar = hx('a546e36bf0527c9d3b16154b82465edd62144c0ac1fc5a18506a2244ba449ac4');
     final u = hx('e6db6867583030db3594c1a424b15f7c726624ec26b3353b10a903a6d0ab1c4c');
-    final want = 'c3da55379de9c6908e94ea4df28d084f32eccf03491c71f754b4075577a28552';
+    const want = 'c3da55379de9c6908e94ea4df28d084f32eccf03491c71f754b4075577a28552';
     final ss = await x.sharedSecretKey(
       keyPair: await x.newKeyPairFromSeed(scalar),
       remotePublicKey: SimplePublicKey(u, type: KeyPairType.x25519),

@@ -3,12 +3,15 @@
 /// The polished public API (Phase 5) wraps this.
 library;
 
+// Internal implementation; the documented public API lives in lib/blifi.dart.
+// ignore_for_file: public_member_api_docs
 import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 import '../crypto/blifi_crypto.dart';
+import '../models/wifi_network.dart';
 import '../protocol/constants.dart';
 import '../protocol/messages.dart';
 import 'ble_transport.dart';

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:blifi/blifi.dart' show WifiAuthMode;
 import 'package:blifi/src/protocol/constants.dart';
 import 'package:blifi/src/protocol/frame.dart';
 import 'package:blifi/src/protocol/messages.dart';
@@ -42,7 +43,7 @@ void main() {
     final nets = decodeScanResponse(Uint8List.fromList(utf8.encode(json)));
     expect(nets.length, 1);
     expect(nets.first.ssid, 'Home');
-    expect(nets.first.authMode, 3);
+    expect(nets.first.authMode, WifiAuthMode.wpa2Psk);
     expect(nets.first.channel, 6);
     expect(nets.first.hidden, isFalse);
   });
