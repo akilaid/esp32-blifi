@@ -41,6 +41,46 @@ typedef struct {
     esp_ip4_addr_t ip;          /*!< Valid on ::BLIFI_EVENT_WIFI_CONNECTED */
 } blifi_event_data_t;
 
+/** Top-level configuration. Prefer ::BLIFI_DEFAULT_CONFIG. */
+typedef struct {
+    const char *device_name;   /*!< BLE name; NULL → "blifi-XXXX" from the MAC */
+    bool        require_pop;   /*!< Require Proof-of-Possession (default true) */
+    uint32_t    prov_timeout_ms; /*!< Provisioning window; 0 = no timeout */
+    blifi_wifi_manager_config_t wifi; /*!< Wi-Fi retry/backoff config */
+} blifi_config_t;
+
+#define BLIFI_DEFAULT_CONFIG() ((blifi_config_t){ \
+    .device_name     = NULL,  \
+    .require_pop     = true,  \
+    .prov_timeout_ms = 0,     \
+    .wifi            = BLIFI_WIFI_MANAGER_DEFAULT_CONFIG(), \
+})
+
+/**
+ * @brief Initialise blifi: Wi-Fi manager, PoP (generated on first boot and
+ *        logged once over UART), and the BLE stack. NVS must already be
+ *        initialised by the application.
+ */
+esp_err_t blifi_init(const blifi_config_t *config);
+
+/**
+ * @brief Start operation: if credentials are stored, connect to Wi-Fi;
+ *        otherwise advertise over BLE for provisioning.
+ */
+esp_err_t blifi_start(void);
+
+/** @brief Stop Wi-Fi and BLE activity. */
+esp_err_t blifi_stop(void);
+
+/** @brief True if Wi-Fi credentials are stored. */
+bool blifi_is_provisioned(void);
+
+/** @brief Erase stored credentials and return to the provisioning state. */
+esp_err_t blifi_reset_credentials(void);
+
+/** @brief The device's Proof-of-Possession string (for display/logging). */
+const char *blifi_get_pop(void);
+
 #ifdef __cplusplus
 }
 #endif

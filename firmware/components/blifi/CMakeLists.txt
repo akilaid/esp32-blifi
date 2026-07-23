@@ -1,6 +1,6 @@
 # blifi — BLE-based Wi-Fi provisioning for ESP32.
-# Phase 3 (Stage A): Wi-Fi core + protocol framing + session crypto + self-tests.
-# ble_transport and provisioning_manager are added in Stage B.
+# Wi-Fi core + protocol framing + PSA session crypto + NimBLE transport +
+# provisioning state machine.
 idf_component_register(
     SRCS
         "src/wifi_manager/wifi_manager.c"
@@ -8,6 +8,8 @@ idf_component_register(
         "src/protocol/messages.c"
         "src/security/crypto.c"
         "src/security/pop.c"
+        "src/ble_transport/ble_transport.c"
+        "src/provisioning_manager/provisioning_manager.c"
         "src/blifi_selftest.c"
     INCLUDE_DIRS
         "include"
@@ -25,5 +27,7 @@ idf_component_register(
         nvs_flash
         esp_timer
         esp_hw_support
+        esp_app_format
         mbedtls
+        bt
 )
