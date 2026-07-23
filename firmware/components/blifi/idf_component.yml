@@ -3,11 +3,11 @@ description: >-
   blifi — BLE-based Wi-Fi provisioning for ESP32. Provision Wi-Fi credentials
   over an encrypted BLE session instead of a hotspot/captive portal. Phase 2:
   Wi-Fi station core (scan, connect, NVS persistence, retry/backoff).
-# Public git-repo metadata (fill the owner before first publish to the registry).
-url: "https://github.com/OWNER/esp32-blifi"
-repository: "https://github.com/OWNER/esp32-blifi.git"
-documentation: "https://github.com/OWNER/esp32-blifi/tree/main/docs"
-issues: "https://github.com/OWNER/esp32-blifi/issues"
+# Public git-repo metadata.
+url: "https://github.com/akilaid/esp32-blifi"
+repository: "https://github.com/akilaid/esp32-blifi.git"
+documentation: "https://github.com/akilaid/esp32-blifi/tree/main/docs"
+issues: "https://github.com/akilaid/esp32-blifi/issues"
 license: "MIT"
 tags:
   - wifi

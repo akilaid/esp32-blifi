@@ -4,8 +4,8 @@ description: >-
   ESP32 over an encrypted Bluetooth Low Energy session (X25519 + AES-256-GCM),
   interoperating with the blifi firmware component.
 version: 0.1.0
-repository: https://github.com/OWNER/esp32-blifi
-homepage: https://github.com/OWNER/esp32-blifi
+repository: https://github.com/akilaid/esp32-blifi
+homepage: https://github.com/akilaid/esp32-blifi
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
