@@ -1,6 +1,6 @@
 # Firmware CI — STUB (Phase 0 scaffolding, no real steps yet).
-# Planned: build the ESP-IDF component/examples with `idf.py build` across a
-# matrix of target boards. See docs/plan.md §3 and §10.
+# Planned: build the `blifi` ESP-IDF component/examples with `idf.py build`
+# across a matrix of target boards.
 name: firmware-ci
 
 on:

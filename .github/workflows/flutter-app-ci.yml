@@ -1,6 +1,5 @@
 # Flutter app CI — STUB (Phase 0 scaffolding, no real steps yet).
 # Planned: analyze, test, and build the APK for flutter/apps/demo_app.
-# See docs/plan.md §9 and §10.
 name: flutter-app-ci
 
 on:

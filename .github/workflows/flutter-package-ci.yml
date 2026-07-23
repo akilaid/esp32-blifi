@@ -1,6 +1,6 @@
 # Flutter package CI — STUB (Phase 0 scaffolding, no real steps yet).
 # Planned: analyze, test, `dart pub publish --dry-run`, and a pana score check
-# for flutter/packages/esp_ble_wifi_provisioning. See docs/plan.md §8 and §10.
+# for flutter/packages/blifi.
 name: flutter-package-ci
 
 on:

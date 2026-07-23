@@ -12,9 +12,9 @@ encrypted session, sends Wi-Fi credentials, and gets the device online.
 
 | Path | Artifact | Status |
 |------|----------|--------|
-| `firmware/components/wifi_ble_prov/` | Core ESP-IDF component (single source of truth) | Not implemented |
-| `arduino/WiFiBleProvisioning/` | Thin Arduino wrapper over the component | Not implemented |
-| `flutter/packages/esp_ble_wifi_provisioning/` | Publishable Flutter/Dart package | Not implemented |
+| `firmware/components/blifi/` | Core ESP-IDF component (single source of truth) | Not implemented |
+| `arduino/Blifi/` | Thin Arduino wrapper over the component | Not implemented |
+| `flutter/packages/blifi/` | Publishable Flutter/Dart package | Not implemented |
 | `flutter/apps/demo_app/` | Polished demo / boilerplate app | Not implemented |
 
 ## Documentation

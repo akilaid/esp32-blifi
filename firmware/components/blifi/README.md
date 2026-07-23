@@ -1,4 +1,4 @@
-# wifi_ble_prov (ESP-IDF component)
+# blifi (ESP-IDF component)
 
 The core ESP-IDF component and single source of truth for BLE-based Wi-Fi
 provisioning: NimBLE GATT transport, X25519 + AES-256-GCM session security,

@@ -1,9 +1,9 @@
-# WiFiBleProvisioning (Arduino library)
+# Blifi (Arduino library)
 
-A thin C++ wrapper over the `wifi_ble_prov` ESP-IDF component — no logic is
+A thin C++ wrapper over the `blifi` ESP-IDF component — no logic is
 duplicated. Translates the component's `esp_event`-based API into idiomatic
 Arduino `std::function` callbacks (`begin`, `onStatusChanged`, `onProvisioned`,
-`resetCredentials`, `isProvisioned`).
+`resetCredentials`, `isProvisioned`). Include with `#include <Blifi.h>`.
 
 > **Requires arduino-esp32 3.x** (IDF5-based), which can pull in ESP-IDF
 > components via `idf_component.yml`. Older cores are not supported.
