@@ -26,8 +26,9 @@ dependencies.lock
 .pub-cache/
 .flutter-plugins
 .flutter-plugins-dependencies
-# Libraries (not apps) don't commit their lockfile.
-flutter/packages/*/pubspec.lock
+# Libraries (not apps) don't commit their lockfile. The demo app under
+# flutter/apps/ does commit its lockfile.
+flutter/packages/**/pubspec.lock
 
 # Android (Flutter app)
 **/android/.gradle/

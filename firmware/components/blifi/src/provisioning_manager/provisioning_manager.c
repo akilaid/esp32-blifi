@@ -46,6 +46,7 @@ static struct {
 } s;
 
 static uint8_t s_scratch[2048];      /* protected by s.lock */
+static uint8_t s_record[2048 + BLIFI_RECORD_OVERHEAD]; /* protected by s.lock */
 static blifi_wifi_ap_t s_aps[20];
 
 #define LOCK()   xSemaphoreTakeRecursive(s.lock, portMAX_DELAY)
@@ -110,14 +111,15 @@ static void pop_load_or_create(void)
 static esp_err_t send_encrypted(blifi_ble_char_t ch, uint8_t msg_type,
                                 const uint8_t *json, size_t jlen)
 {
-    uint8_t rec[sizeof(s_scratch) + BLIFI_RECORD_OVERHEAD];
+    /* s_record is static (not on the small NimBLE host-task stack); callers
+     * hold s.lock so it is not re-entered. */
     size_t rlen = 0;
     esp_err_t err = blifi_crypto_encrypt(&s.session, msg_type, json, jlen,
-                                         rec, sizeof(rec), &rlen);
+                                         s_record, sizeof(s_record), &rlen);
     if (err != ESP_OK) {
         return err;
     }
-    return blifi_ble_send(ch, msg_type, rec, rlen);
+    return blifi_ble_send(ch, msg_type, s_record, rlen);
 }
 
 static void send_status(blifi_status_t code, const esp_ip4_addr_t *ip)

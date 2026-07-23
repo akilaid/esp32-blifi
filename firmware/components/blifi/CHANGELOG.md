@@ -32,3 +32,8 @@ versioned independently under [Semantic Versioning](https://semver.org/).
 - On-device self-tests (`blifi_selftest`, `selftest` command) with RFC 7748 /
   RFC 5869 / AES-GCM known-answer vectors plus session and framing round-trips.
 
+### Fixed
+- NimBLE host-task stack overflow when handling a scan request: moved the
+  encrypted-record buffer off the stack (it is lock-guarded) and raised
+  `CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE`. Found via live phone interop.
+
