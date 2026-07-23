@@ -1,11 +1,31 @@
-# demo_app (Flutter demo / boilerplate)
+# blifi demo app
 
-A polished, intentionally generic Flutter app that demonstrates the full
-provisioning flow end-to-end (BLE scan → connect → Wi-Fi list → password entry
-→ live progress → success/failure → reconnection) and doubles as a reusable
-starting point. Depends on the `blifi` package via a local path dependency.
+A polished, intentionally **generic** Flutter app demonstrating the full BLE
+Wi-Fi provisioning flow with the [`blifi`](../../packages/blifi) package — and a
+reusable boilerplate to start your own provisioning UI from.
 
-Android build target: `compileSdk`/`targetSdk` 36, `minSdkVersion` 30. Primary
-testing is on a physical Android device.
+**Flow:** grant permissions → scan for devices → connect (enter the device's
+Proof-of-Possession) → pick a Wi-Fi network (signal strength + lock) → enter the
+password → live progress → success (SSID + IP) or failure with retry → start
+over / provision another.
 
-> **Not yet implemented.** Scaffolding only — built in a later phase.
+## Run
+
+```bash
+flutter pub get
+flutter run -d <your-android-device>   # a physical device with BLE
+```
+
+The device's Proof-of-Possession is printed on the ESP32's serial output on
+first boot.
+
+## Notes
+- Depends on the package via a **path dependency**; switch to a pub.dev version
+  once published.
+- State is a plain `ChangeNotifier` (`lib/provisioning_controller.dart`) — no
+  state-management package, so it's easy to adapt.
+- Android: `minSdk 30`, `compile/targetSdk 36`. BLE permissions are requested at
+  runtime via `permission_handler`.
+- "Start over" disconnects and re-scans (app-side). Erasing the device's stored
+  credentials is a device-side action (serial `reset`), not part of the BLE
+  protocol.
