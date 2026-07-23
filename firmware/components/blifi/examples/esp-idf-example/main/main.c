@@ -15,6 +15,7 @@
 #include "nvs_flash.h"
 
 #include "blifi.h"
+#include "blifi_selftest.h"
 
 static const char *TAG = "example";
 
@@ -135,6 +136,13 @@ static int cmd_info(int argc, char **argv)
     return 0;
 }
 
+static int cmd_selftest(int argc, char **argv)
+{
+    int fails = blifi_selftest();
+    printf(fails == 0 ? "self-test: ALL PASSED\n" : "self-test: %d FAILED\n", fails);
+    return fails == 0 ? 0 : 1;
+}
+
 static void register_commands(void)
 {
     const esp_console_cmd_t cmds[] = {
@@ -144,6 +152,7 @@ static void register_commands(void)
         { .command = "status",  .help = "Show connection status and IP",            .func = &cmd_status },
         { .command = "erase",   .help = "Erase stored credentials",                 .func = &cmd_erase },
         { .command = "info",    .help = "Show stored credentials",                  .func = &cmd_info },
+        { .command = "selftest",.help = "Run crypto/framing self-tests",            .func = &cmd_selftest },
     };
     for (size_t i = 0; i < sizeof(cmds) / sizeof(cmds[0]); i++) {
         ESP_ERROR_CHECK(esp_console_cmd_register(&cmds[i]));
