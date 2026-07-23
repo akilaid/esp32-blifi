@@ -1,0 +1,20 @@
+# Flutter app CI — STUB (Phase 0 scaffolding, no real steps yet).
+# Planned: analyze, test, and build the APK for flutter/apps/demo_app.
+# See docs/plan.md §9 and §10.
+name: flutter-app-ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-apk:
+    name: analyze / test / build apk (stub)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TODO
+        run: |
+          echo "TODO: flutter analyze"
+          echo "TODO: flutter test"
+          echo "TODO: flutter build apk"

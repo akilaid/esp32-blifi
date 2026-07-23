@@ -1,0 +1,21 @@
+# Flutter package CI — STUB (Phase 0 scaffolding, no real steps yet).
+# Planned: analyze, test, `dart pub publish --dry-run`, and a pana score check
+# for flutter/packages/esp_ble_wifi_provisioning. See docs/plan.md §8 and §10.
+name: flutter-package-ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  analyze-test:
+    name: analyze / test / publish-dry-run / pana (stub)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TODO
+        run: |
+          echo "TODO: dart analyze"
+          echo "TODO: dart test"
+          echo "TODO: dart pub publish --dry-run"
+          echo "TODO: pana score check"

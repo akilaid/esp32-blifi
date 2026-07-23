@@ -1,0 +1,9 @@
+# Local tooling — kept out of the repo
+CLAUDE.md
+.claude/
+
+# Planning doc kept local, not tracked
+docs/plan.md
+
+# macOS
+.DS_Store
