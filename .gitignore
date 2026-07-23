@@ -7,3 +7,10 @@ docs/plan.md
 
 # macOS
 .DS_Store
+
+# ESP-IDF build artifacts
+build/
+sdkconfig
+sdkconfig.old
+managed_components/
+dependencies.lock
