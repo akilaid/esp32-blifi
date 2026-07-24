@@ -1,0 +1,38 @@
+# Common ESP32 devkit flash size.
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
+
+# HKDF for the session key schedule.
+CONFIG_MBEDTLS_HKDF_C=y
+
+# BLE via NimBLE. Larger host-task stack: message handling runs there and does
+# crypto + a Wi-Fi scan.
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE=8192
+
+# Larger app partition (BLE + Wi-Fi + mbedTLS).
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# Keep the Wi-Fi routines in flash instead of IRAM. BLE + Wi-Fi + mbedTLS is tight
+# on the classic ESP32's IRAM (overflows on ESP-IDF 5.x otherwise); this frees ~30 KB
+# at a small Wi-Fi throughput cost. Harmless on chips with more IRAM.
+CONFIG_ESP_WIFI_IRAM_OPT=n
+CONFIG_ESP_WIFI_RX_IRAM_OPT=n
+
+# Reset PIN: hold GPIO13 (D13) to GND for 3 s at boot to erase the blifi_nvs
+# partition (Wi-Fi credentials only). Runs in the bootloader before app_main;
+# the default nvs partition (PoP, app data) is untouched.
+CONFIG_BOOTLOADER_FACTORY_RESET=y
+CONFIG_BOOTLOADER_NUM_PIN_FACTORY_RESET=13
+CONFIG_BOOTLOADER_FACTORY_RESET_PIN_LOW=y
+CONFIG_BOOTLOADER_HOLD_TIME_GPIO=3
+CONFIG_BOOTLOADER_DATA_FACTORY_RESET="blifi_nvs"
+
+# Reset LED: pulse GPIO2 (onboard LED on many devkits) for 2 s on the boot after
+# a reset-pin hard reset — "credentials were wiped" feedback with no app code.
+CONFIG_BLIFI_RESET_INDICATOR_ENABLE=y
+CONFIG_BLIFI_RESET_INDICATOR_GPIO=2
+CONFIG_BLIFI_RESET_INDICATOR_ACTIVE_HIGH=y
+CONFIG_BLIFI_RESET_INDICATOR_PULSE_MS=2000

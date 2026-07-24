@@ -6,7 +6,10 @@ versioned independently under [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+- Minimal example (`examples/minimal`): the smallest useful integration —
+  provisioning plus the reset pin and reset-indicator LED via pure
+  configuration, without the serial-console commands of `esp-idf-example`.
 
 ## [0.1.0] — 2026-07-24
 

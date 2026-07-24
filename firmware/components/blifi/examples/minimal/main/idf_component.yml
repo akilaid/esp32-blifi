@@ -1,0 +1,7 @@
+dependencies:
+  akilaid/blifi:
+    version: "*"
+    # Inside the monorepo (and CI) build against the local component; when this
+    # example is extracted via `idf.py create-project-from-example`, the path
+    # does not exist and the component is fetched from the registry instead.
+    override_path: "../../.."
