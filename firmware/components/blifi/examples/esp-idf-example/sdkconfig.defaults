@@ -18,6 +18,12 @@ CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE=8192
 CONFIG_PARTITION_TABLE_CUSTOM=y
 CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
 
+# Keep the Wi-Fi routines in flash instead of IRAM. BLE + Wi-Fi + mbedTLS is tight
+# on the classic ESP32's IRAM (overflows on ESP-IDF 5.x otherwise); this frees ~30 KB
+# at a small Wi-Fi throughput cost. Harmless on chips with more IRAM.
+CONFIG_ESP_WIFI_IRAM_OPT=n
+CONFIG_ESP_WIFI_RX_IRAM_OPT=n
+
 # Hard reset (§6.1): hold GPIO13 (D13) to GND for 3 s at boot to erase the
 # blifi_nvs partition (Wi-Fi credentials only). Runs in the bootloader before
 # app_main; the default nvs partition (PoP, app data) is untouched.
