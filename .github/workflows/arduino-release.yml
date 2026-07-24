@@ -13,19 +13,22 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout mirror repo (with tags)
-        uses: actions/checkout@v4
-        with:
-          repository: akilaid/esp32-blifi-arduino
-          token: ${{ secrets.ARDUINO_MIRROR_PAT }}
-          fetch-depth: 0
+      - name: Clone mirror repo (full clone → brings tags)
+        env:
+          MIRROR_TOKEN: ${{ secrets.ARDUINO_MIRROR_PAT }}
+        run: |
+          git clone "https://x-access-token:${MIRROR_TOKEN}@github.com/akilaid/esp32-blifi-arduino.git" _mirror
 
       - name: Compare library.properties version to latest tag
         id: check
+        working-directory: _mirror
         run: |
+          if [ ! -f library.properties ]; then
+            echo "::error::mirror has no library.properties yet — run arduino-mirror first"; exit 1
+          fi
           version=$(grep -E '^version=' library.properties | head -1 | cut -d= -f2 | tr -d '[:space:]')
           if [ -z "$version" ]; then
-            echo "::error::no version= in library.properties (is the mirror synced?)"; exit 1
+            echo "::error::no version= in library.properties"; exit 1
           fi
           latest=$(git tag -l 'v*' --sort=-v:refname | head -1 | sed 's/^v//')
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -43,6 +46,7 @@ jobs:
 
       - name: Tag + create release
         if: steps.check.outputs.newer == 'true'
+        working-directory: _mirror
         env:
           GH_TOKEN: ${{ secrets.ARDUINO_MIRROR_PAT }}
           V: ${{ steps.check.outputs.version }}

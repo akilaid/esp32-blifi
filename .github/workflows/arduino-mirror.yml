@@ -24,12 +24,13 @@ jobs:
       - name: Checkout monorepo
         uses: actions/checkout@v4
 
-      - name: Checkout mirror repo
-        uses: actions/checkout@v4
-        with:
-          repository: akilaid/esp32-blifi-arduino
-          token: ${{ secrets.ARDUINO_MIRROR_PAT }}
-          path: _mirror
+      - name: Clone mirror repo (tolerates an empty/uninitialised repo)
+        env:
+          MIRROR_TOKEN: ${{ secrets.ARDUINO_MIRROR_PAT }}
+        run: |
+          # A raw clone handles an empty repo (unlike actions/checkout, which
+          # needs an existing branch); the first sync then creates `main`.
+          git clone "https://x-access-token:${MIRROR_TOKEN}@github.com/akilaid/esp32-blifi-arduino.git" _mirror
 
       - name: Sync arduino/Blifi/ → mirror root
         run: |
@@ -56,4 +57,4 @@ jobs:
             exit 0
           fi
           git commit -m "Sync from esp32-blifi@${GITHUB_SHA::7}"
-          git push
+          git push origin HEAD:main   # creates main on first run, updates it after
