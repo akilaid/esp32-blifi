@@ -6,6 +6,12 @@ versioned independently under [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.1.0] — 2026-07-24
+
+First public release on the ESP Component Registry (`akilaid/blifi`).
+
 ### Added
 - Wi-Fi station manager (`blifi_wifi_manager`): active scan, connect using
   supplied or NVS-stored credentials, credential persistence, and a

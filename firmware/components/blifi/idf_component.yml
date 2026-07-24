@@ -1,8 +1,11 @@
 version: "0.1.0"
 description: >-
   blifi — BLE-based Wi-Fi provisioning for ESP32. Provision Wi-Fi credentials
-  over an encrypted BLE session instead of a hotspot/captive portal. Phase 2:
-  Wi-Fi station core (scan, connect, NVS persistence, retry/backoff).
+  over an encrypted BLE session (X25519 + AES-256-GCM, gated by a
+  Proof-of-Possession) instead of a hotspot/captive portal. Includes a NimBLE
+  GATT transport, Wi-Fi station manager with NVS persistence and retry/backoff,
+  and an optional reset-pin factory reset. Companion Flutter package: `blifi`
+  on pub.dev.
 # Public git-repo metadata.
 url: "https://github.com/akilaid/esp32-blifi"
 repository: "https://github.com/akilaid/esp32-blifi.git"
@@ -17,3 +20,12 @@ tags:
   - nimble
 dependencies:
   idf: ">=5.3"
+# Keep local build/IDE artifacts out of the packed registry archive.
+files:
+  exclude:
+    - "examples/**/build/**"
+    - "examples/**/sdkconfig"
+    - "examples/**/sdkconfig.old"
+    - "examples/**/dependencies.lock"
+    - "examples/**/managed_components/**"
+    - "**/.cache/**"
