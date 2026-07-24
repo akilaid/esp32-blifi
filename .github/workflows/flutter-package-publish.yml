@@ -19,6 +19,7 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       id-token: write # pub.dev OIDC token exchange
     defaults:
@@ -29,6 +30,17 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
+      # subosito/flutter-action does not mint the pub.dev OIDC token the way
+      # dart-lang/setup-dart does; without this step `dart pub publish` falls
+      # back to interactive browser auth and hangs the runner.
+      - name: Mint pub.dev OIDC token
+        run: |
+          PUB_TOKEN=$(curl -sLS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=https://pub.dev" \
+            -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" | jq -r .value)
+          echo "::add-mask::${PUB_TOKEN}"
+          echo "PUB_TOKEN=${PUB_TOKEN}" >> "${GITHUB_ENV}"
+          dart pub token add https://pub.dev --env-var PUB_TOKEN
       - run: flutter pub get
       - name: Publish to pub.dev
         run: dart pub publish --force
