@@ -58,16 +58,24 @@ The `blifi` component is pulled automatically from the monorepo via
 | `Blifi.statusString(s)` | Human-readable name for a status code. |
 | `Blifi.onDataResetRequested(cb)` / `Blifi.wasHardReset()` | Reset-pin hard-reset hooks — see below. |
 
-## Reset-pin hard reset (advanced, off by default)
+## Reset-pin hard reset (enabled)
 
-Holding a GPIO at power-on to factory-reset the device is a **bootloader**
-feature. It works in this PlatformIO build but requires extra config
-(`CONFIG_BOOTLOADER_FACTORY_RESET`, a dedicated `blifi_nvs` partition) — see the
-component's
-[hard-reset guide](../../firmware/components/blifi/README.md#hard-reset-reset-pin-factory-reset).
-It is **not** enabled in this basic setup, so `wasHardReset()` returns false and
-`onDataResetRequested()` does not fire; the software `resetCredentials()` is the
-everyday "forget Wi-Fi" path.
+This project **enables** the bootloader factory reset (something the plain Arduino
+IDE can't do). Hold **GPIO13 (D13) → GND for 3 seconds** as the board powers on and
+the bootloader erases the `blifi_nvs` partition — clearing the Wi-Fi credentials
+before the app even starts. On the next boot, `Blifi.wasHardReset()` returns true
+and your `onDataResetRequested()` callback fires so you can wipe your own data. The
+**PoP survives** (it lives in the default `nvs` partition), so a printed QR/sticker
+keeps working.
+
+Configured in `sdkconfig.defaults` (`CONFIG_BOOTLOADER_FACTORY_RESET`, GPIO13, low,
+3 s, erase `blifi_nvs`) + the `blifi_nvs` row in `partitions.csv`. To change the pin
+or hold time, edit those and **rebuild clean** (`pio run -t fullclean` first —
+linker/memory changes need a clean build). Design details:
+[component hard-reset guide](../../firmware/components/blifi/README.md).
+
+The software `Blifi.resetCredentials()` is the in-code "forget Wi-Fi" path and works
+regardless.
 
 ## Notes
 

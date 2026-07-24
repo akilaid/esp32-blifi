@@ -8,6 +8,13 @@ extern "C" {
 #include "nvs_flash.h"
 }
 
+// Tell the Arduino core that Bluetooth IS in use. blifi uses the ESP-IDF NimBLE
+// stack directly (not Arduino's BLE library), so Arduino's bleInUse() is false
+// and initArduino() would otherwise call btMemRelease(BT_MODE_BLE) at startup —
+// freeing the BLE controller memory and making nimble_port_init() fail with
+// ESP_ERR_INVALID_STATE. Overriding this weak symbol keeps the BLE memory.
+extern "C" bool btInUse() { return true; }
+
 BlifiClass Blifi;
 
 bool BlifiClass::begin() { return beginWith(nullptr); }

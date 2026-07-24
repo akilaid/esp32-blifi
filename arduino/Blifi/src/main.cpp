@@ -23,12 +23,21 @@ void setup() {
     Serial.println(Blifi.statusString(s));
   });
 
+  // Fires on the boot after a reset-pin hard reset (hold GPIO13 to GND for 3 s).
+  // Wi-Fi credentials are already gone; erase your own data here if needed.
+  Blifi.onDataResetRequested([]() {
+    Serial.println("[hard-reset] app data would be erased here");
+  });
+
   Blifi.begin();
 
+  Serial.print("Was hard reset: ");
+  Serial.println(Blifi.wasHardReset() ? "yes" : "no");
   Serial.print("Ready to provision over BLE. PoP: ");
   Serial.println(Blifi.pop());
 }
 
 void loop() {
-  // Nothing to do — blifi runs in the background.
+  // blifi runs in the background; keep the loop task idle-friendly.
+  delay(1000);
 }

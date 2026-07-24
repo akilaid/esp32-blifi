@@ -19,9 +19,23 @@ versioned independently under [Semantic Versioning](https://semver.org/).
   Bluedroid-only and can't build the NimBLE component or change bootloader
   config), build/upload steps, and the API.
 
+### Fixed (Arduino/ESP-IDF-5.5 integration — all in the wrapper/config, not the component)
+- **BLE controller wouldn't start** (`nimble_port_init: ESP_ERR_INVALID_STATE`):
+  Arduino's `initArduino()` frees the BLE controller memory at boot unless
+  `bleInUse()` is true. Since blifi uses the IDF NimBLE stack directly (not
+  Arduino's BLE library), the wrapper overrides the weak `btInUse()` to return
+  true (`Blifi.cpp`) so the memory is kept.
+- **Crash on credential receipt** (`stack overflow in task sys_evt`): blifi runs
+  AES-GCM + BLE notify in the default event-loop task; raised
+  `CONFIG_ESP_SYSTEM_EVENT_TASK_STACK_SIZE=6144`.
+- **Task-watchdog warnings**: added a `delay()` in the sketch `loop()`.
+
 ### Notes
-- Verified on hardware: provisioning → Wi-Fi connect → `Online!` with both
-  callbacks firing. The IDF-6.0 `blifi` component builds unchanged on ESP-IDF 5.5.
-- The reset-pin hard reset is a bootloader feature and is not enabled in this
-  basic setup (`wasHardReset()` returns false); software `resetCredentials()`
-  works. See the component README to enable the pin reset.
+- Verified on hardware: full BLE provisioning (handshake → scan list → credentials
+  → Wi-Fi connect → `Online!`), no crash. The IDF-6.0 `blifi` component builds
+  unchanged on ESP-IDF 5.5.
+- Reset-pin hard reset is **enabled** and coexists with BLE: hold GPIO13 → GND for
+  3 s at boot to factory-reset (bootloader erases `blifi_nvs`; PoP preserved).
+  `wasHardReset()` / `onDataResetRequested()` are live. Configured via
+  `sdkconfig.defaults` + `partitions.csv`. Note: changing linker/memory config
+  (like enabling this) needs a clean rebuild (`pio run -t fullclean`).
