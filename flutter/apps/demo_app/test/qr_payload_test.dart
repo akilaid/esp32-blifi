@@ -3,16 +3,16 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('parses a valid payload', () {
-    final p = QrPayload.tryParse('blifi://provision?name=blifi-2F04&pop=ABCD2345&v=1');
+    final p = QrPayload.tryParse('blifi://provision?name=blifi-A1B2&pop=ABCD2345&v=1');
     expect(p, isNotNull);
-    expect(p!.deviceName, 'blifi-2F04');
+    expect(p!.deviceName, 'blifi-A1B2');
     expect(p.pop, 'ABCD2345');
   });
 
   test('PoP is optional', () {
-    final p = QrPayload.tryParse('blifi://provision?name=blifi-2F04');
+    final p = QrPayload.tryParse('blifi://provision?name=blifi-A1B2');
     expect(p, isNotNull);
-    expect(p!.deviceName, 'blifi-2F04');
+    expect(p!.deviceName, 'blifi-A1B2');
     expect(p.pop, isNull);
   });
 
@@ -23,7 +23,7 @@ void main() {
   });
 
   test('round-trips through toQrData', () {
-    const original = QrPayload('blifi-2F04', 'ABCD2345');
+    const original = QrPayload('blifi-A1B2', 'ABCD2345');
     final parsed = QrPayload.tryParse(original.toQrData());
     expect(parsed!.deviceName, original.deviceName);
     expect(parsed.pop, original.pop);
