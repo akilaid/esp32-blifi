@@ -1,5 +1,9 @@
 # NimBLE + Wi-Fi + mbedTLS overflow the default 1 MB app partition, so use ~2 MB.
-# Name,     Type, SubType, Offset,   Size
-nvs,        data, nvs,     0x9000,   0x6000
-phy_init,   data, phy,     0xf000,   0x1000
-factory,    app,  factory, 0x10000,  0x200000
+# blifi_nvs is a dedicated NVS partition for Wi-Fi credentials so the bootloader
+# factory reset (see sdkconfig.defaults) erases only it, leaving the default nvs
+# partition (PoP, PHY/RF calibration, app data) intact.
+# Name,      Type, SubType, Offset,   Size
+nvs,         data, nvs,     0x9000,   0x6000
+phy_init,    data, phy,     0xf000,   0x1000
+factory,     app,  factory, 0x10000,  0x200000
+blifi_nvs,   data, nvs,     0x210000, 0x4000

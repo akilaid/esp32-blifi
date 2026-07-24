@@ -32,6 +32,7 @@ typedef enum {
     BLIFI_EVENT_WIFI_FAILED,          /*!< Gave up after retries; see .status */
     BLIFI_EVENT_PROV_TIMEOUT,         /*!< Provisioning window elapsed (Phase 3) */
     BLIFI_EVENT_REPROVISIONING_TRIGGERED, /*!< Repeated failure / manual trigger */
+    BLIFI_EVENT_HARD_RESET_TRIGGERED, /*!< Boot after a reset-pin factory reset (§6.1) */
 } blifi_event_id_t;
 
 /** Data payload accompanying a ::BLIFI_EVENT post. */
@@ -80,6 +81,32 @@ esp_err_t blifi_reset_credentials(void);
 
 /** @brief The device's Proof-of-Possession string (for display/logging). */
 const char *blifi_get_pop(void);
+
+/**
+ * @brief Callback invoked once on the boot following a hard (reset-pin) reset,
+ *        so the application can erase its own data (its NVS namespace(s),
+ *        SPIFFS/LittleFS files, etc.). Wi-Fi credentials are already gone — the
+ *        bootloader erased the dedicated `blifi_nvs` partition before app_main.
+ * @param arg The opaque pointer passed to ::blifi_register_data_reset_callback.
+ */
+typedef void (*blifi_data_reset_cb_t)(void *arg);
+
+/**
+ * @brief Register an optional app-data reset callback for the hard-reset flow
+ *        (§6.1). Call this **before** ::blifi_start (typically right before
+ *        ::blifi_init); ::blifi_start fires it — and posts
+ *        ::BLIFI_EVENT_HARD_RESET_TRIGGERED — when this boot follows a hard reset.
+ *        Passing NULL clears any registration.
+ */
+esp_err_t blifi_register_data_reset_callback(blifi_data_reset_cb_t cb, void *arg);
+
+/**
+ * @brief True if this boot immediately follows a hard (reset-pin) factory reset.
+ *        The underlying bootloader flag is consumed on first read during
+ *        ::blifi_init, so this returns a stable cached value and reverts to false
+ *        on the next normal boot.
+ */
+bool blifi_was_hard_reset(void);
 
 #ifdef __cplusplus
 }

@@ -17,3 +17,12 @@ CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE=8192
 # Larger app partition (BLE + Wi-Fi + mbedTLS).
 CONFIG_PARTITION_TABLE_CUSTOM=y
 CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# Hard reset (§6.1): hold GPIO13 (D13) to GND for 3 s at boot to erase the
+# blifi_nvs partition (Wi-Fi credentials only). Runs in the bootloader before
+# app_main; the default nvs partition (PoP, app data) is untouched.
+CONFIG_BOOTLOADER_FACTORY_RESET=y
+CONFIG_BOOTLOADER_NUM_PIN_FACTORY_RESET=13
+CONFIG_BOOTLOADER_FACTORY_RESET_PIN_LOW=y
+CONFIG_BOOTLOADER_HOLD_TIME_GPIO=3
+CONFIG_BOOTLOADER_DATA_FACTORY_RESET="blifi_nvs"

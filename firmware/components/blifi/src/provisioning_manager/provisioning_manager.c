@@ -15,10 +15,12 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "nvs.h"
+#include "nvs_flash.h"
 
 #include "ble_transport.h"
 #include "crypto.h"
 #include "frame.h"
+#include "hard_reset.h"
 #include "messages.h"
 #include "pop.h"
 
@@ -26,6 +28,9 @@ static const char *TAG = "blifi_prov";
 
 #define NVS_NS      "blifi"
 #define NVS_KEY_POP "pop"
+/** Dedicated NVS partition for Wi-Fi credentials, erasable by the bootloader
+ *  factory reset (§6.1). PoP stays in the default `nvs` partition. */
+#define BLIFI_CREDS_PARTITION "blifi_nvs"
 #define LOCKOUT_FAILS 5
 #define LOCKOUT_US    (30 * 1000 * 1000)
 
@@ -315,12 +320,48 @@ static void start_ble(void)
 
 /* -------------------------------------------------------------- public */
 
+/**
+ * Bring up the dedicated `blifi_nvs` credentials partition and return its name.
+ * If the partition is absent (integrator hasn't merged partitions.example.csv),
+ * warn loudly and fall back to the default `nvs` partition so provisioning still
+ * works — only the reset-pin factory reset is then unscoped. Never fails silently.
+ */
+static const char *resolve_creds_partition(void)
+{
+    esp_err_t err = nvs_flash_init_partition(BLIFI_CREDS_PARTITION);
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_LOGW(TAG, "erasing '%s' partition (%s)", BLIFI_CREDS_PARTITION,
+                 esp_err_to_name(err));
+        if (nvs_flash_erase_partition(BLIFI_CREDS_PARTITION) == ESP_OK) {
+            err = nvs_flash_init_partition(BLIFI_CREDS_PARTITION);
+        }
+    }
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "Wi-Fi credentials in dedicated '%s' partition (hard-reset ready)",
+                 BLIFI_CREDS_PARTITION);
+        return BLIFI_CREDS_PARTITION;
+    }
+    if (err == ESP_ERR_NOT_FOUND) {
+        ESP_LOGW(TAG, "=====================================================================");
+        ESP_LOGW(TAG, " '%s' partition not found — reset-pin factory reset is NOT scoped.",
+                 BLIFI_CREDS_PARTITION);
+        ESP_LOGW(TAG, " Merge partitions.example.csv into your partitions.csv to enable it.");
+        ESP_LOGW(TAG, " Falling back to the default 'nvs' partition for credentials.");
+        ESP_LOGW(TAG, "=====================================================================");
+        return NULL; /* default "nvs" */
+    }
+    ESP_LOGE(TAG, "nvs_flash_init_partition('%s'): %s — using default 'nvs'",
+             BLIFI_CREDS_PARTITION, esp_err_to_name(err));
+    return NULL;
+}
+
 esp_err_t blifi_init(const blifi_config_t *config)
 {
     if (s.inited) {
         return ESP_OK;
     }
     s.cfg = config ? *config : (blifi_config_t)BLIFI_DEFAULT_CONFIG();
+    s.cfg.wifi.nvs_partition = resolve_creds_partition();
     s.lock = xSemaphoreCreateRecursiveMutex();
     if (!s.lock) {
         return ESP_ERR_NO_MEM;
@@ -329,6 +370,12 @@ esp_err_t blifi_init(const blifi_config_t *config)
     ESP_RETURN_ON_ERROR(esp_event_handler_instance_register(
         BLIFI_EVENT, ESP_EVENT_ANY_ID, wifi_event, NULL, NULL), TAG, "evt reg");
     pop_load_or_create();
+
+    /* Cache the bootloader's factory-reset flag now (the getter consumes it on
+     * first read). The event + app callback fire in blifi_start(), by which point
+     * the app has registered its BLIFI_EVENT handler. */
+    blifi_hard_reset_init_on_boot();
+
     s.state = ST_UNPROV;
     s.inited = true;
     return ESP_OK;
@@ -339,6 +386,18 @@ esp_err_t blifi_start(void)
     if (!s.inited) {
         return ESP_ERR_INVALID_STATE;
     }
+
+    /* Notify of a reset-pin hard reset once, now that the app's event handler is
+     * registered and its data-reset callback (if any) is set. */
+    static bool hard_reset_notified;
+    if (!hard_reset_notified && blifi_was_hard_reset()) {
+        hard_reset_notified = true;
+        ESP_LOGW(TAG, "hard reset — Wi-Fi credentials cleared; PoP preserved");
+        blifi_event_data_t ev = { .status = BLIFI_STATUS_IDLE };
+        esp_event_post(BLIFI_EVENT, BLIFI_EVENT_HARD_RESET_TRIGGERED, &ev, sizeof(ev), 0);
+        blifi_hard_reset_dispatch();
+    }
+
     if (blifi_is_provisioned()) {
         LOCK();
         if (s.state != ST_CONNECTED) {

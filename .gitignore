@@ -40,6 +40,9 @@ flutter/packages/**/pubspec.lock
 # Locally generated, device-specific provisioning QR codes
 docs/qr/
 
+# clangd / IDE index cache
+**/.cache/
+
 # Editors / IDE
 .idea/
 .vscode/

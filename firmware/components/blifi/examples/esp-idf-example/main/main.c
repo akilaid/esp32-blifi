@@ -22,11 +22,21 @@ static const char *TAG = "example";
 static void on_blifi_event(void *arg, esp_event_base_t base, int32_t id, void *data)
 {
     const blifi_event_data_t *e = data;
-    if (id == BLIFI_EVENT_WIFI_CONNECTED) {
+    if (id == BLIFI_EVENT_HARD_RESET_TRIGGERED) {
+        ESP_LOGW(TAG, "[event] HARD_RESET_TRIGGERED — Wi-Fi credentials cleared by reset pin");
+    } else if (id == BLIFI_EVENT_WIFI_CONNECTED) {
         ESP_LOGI(TAG, "[event] %s  ip=" IPSTR, blifi_status_str(e->status), IP2STR(&e->ip));
     } else {
         ESP_LOGI(TAG, "[event] %s", blifi_status_str(e->status));
     }
+}
+
+/* Opt-in hook: on the boot after a reset-pin hard reset, blifi calls this so the
+ * app can wipe its own data. Wi-Fi credentials are already gone; the PoP (in the
+ * default nvs partition) is preserved. */
+static void on_data_reset(void *arg)
+{
+    ESP_LOGW(TAG, "[hard-reset] app would erase its own data here (demo: nothing to erase)");
 }
 
 static int cmd_status(int argc, char **argv)
@@ -61,6 +71,12 @@ static int cmd_selftest(int argc, char **argv)
     return fails == 0 ? 0 : 1;
 }
 
+static int cmd_hardreset(int argc, char **argv)
+{
+    printf("was hard reset this boot: %s\n", blifi_was_hard_reset() ? "yes" : "no");
+    return 0;
+}
+
 static void register_commands(void)
 {
     const esp_console_cmd_t cmds[] = {
@@ -68,6 +84,7 @@ static void register_commands(void)
         { .command = "pop",     .help = "Show the Proof-of-Possession",     .func = &cmd_pop },
         { .command = "reset",   .help = "Erase credentials, re-provision",  .func = &cmd_reset },
         { .command = "selftest",.help = "Run crypto/framing self-tests",    .func = &cmd_selftest },
+        { .command = "hardreset?",.help = "Report if this boot followed a reset-pin hard reset", .func = &cmd_hardreset },
     };
     for (size_t i = 0; i < sizeof(cmds) / sizeof(cmds[0]); i++) {
         ESP_ERROR_CHECK(esp_console_cmd_register(&cmds[i]));
@@ -83,6 +100,7 @@ void app_main(void)
     }
 
     blifi_config_t cfg = BLIFI_DEFAULT_CONFIG();
+    blifi_register_data_reset_callback(on_data_reset, NULL); /* before init */
     ESP_ERROR_CHECK(blifi_init(&cfg));
     ESP_ERROR_CHECK(esp_event_handler_instance_register(
         BLIFI_EVENT, ESP_EVENT_ANY_ID, on_blifi_event, NULL, NULL));

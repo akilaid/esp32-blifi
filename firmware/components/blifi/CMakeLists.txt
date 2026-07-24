@@ -10,6 +10,7 @@ idf_component_register(
         "src/security/pop.c"
         "src/ble_transport/ble_transport.c"
         "src/provisioning_manager/provisioning_manager.c"
+        "src/hard_reset/hard_reset.c"
         "src/blifi_selftest.c"
     INCLUDE_DIRS
         "include"
@@ -19,6 +20,7 @@ idf_component_register(
         "src/security"
         "src/ble_transport"
         "src/provisioning_manager"
+        "src/hard_reset"
     REQUIRES
         esp_wifi
         esp_netif
@@ -28,6 +30,7 @@ idf_component_register(
         esp_timer
         esp_hw_support
         esp_app_format
+        bootloader_support
         mbedtls
         bt
 )

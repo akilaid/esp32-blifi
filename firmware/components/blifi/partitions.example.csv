@@ -1,0 +1,16 @@
+# blifi — example partition table (merge into your project's partitions.csv).
+#
+# `blifi_nvs` is a dedicated NVS partition holding ONLY the Wi-Fi credentials, so
+# the ESP-IDF bootloader factory reset (reset-pin, see the component README) can
+# erase just this partition. The default `nvs` partition — which keeps the PoP,
+# PHY/RF calibration, and your app's own data — is left untouched.
+#
+# Sizes below assume a 4 MB flash with a single ~2 MB `factory` app (NimBLE +
+# Wi-Fi + mbedTLS). Adjust offsets/sizes to your own layout; only the `blifi_nvs`
+# row and pointing CONFIG_BOOTLOADER_DATA_FACTORY_RESET at it are required.
+#
+# Name,      Type, SubType, Offset,   Size
+nvs,         data, nvs,     0x9000,   0x6000
+phy_init,    data, phy,     0xf000,   0x1000
+factory,     app,  factory, 0x10000,  0x200000
+blifi_nvs,   data, nvs,     0x210000, 0x4000

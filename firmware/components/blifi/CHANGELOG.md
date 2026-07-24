@@ -31,6 +31,22 @@ versioned independently under [Semantic Versioning](https://semver.org/).
   reset_credentials/get_pop`).
 - On-device self-tests (`blifi_selftest`, `selftest` command) with RFC 7748 /
   RFC 5869 / AES-GCM known-answer vectors plus session and framing round-trips.
+- Hard reset via reset pin (docs/plan.md §6.1, ADR 0005): the ESP-IDF bootloader
+  factory reset erases a dedicated `blifi_nvs` partition (Wi-Fi credentials only)
+  when a GPIO is held at boot. New public API `blifi_register_data_reset_callback()`
+  and `blifi_was_hard_reset()`, plus the `BLIFI_EVENT_HARD_RESET_TRIGGERED` event,
+  let the app erase its own data on the next boot. Ships `partitions.example.csv`;
+  the reset GPIO/level/hold-time and erase target are set via bootloader Kconfig in
+  the app's `sdkconfig.defaults` (see README). The PoP stays in the default `nvs`
+  partition, so it survives a hard reset (printed QR/sticker keeps working).
+
+### Changed
+- Wi-Fi credentials now persist in the dedicated `blifi_nvs` partition (via
+  `blifi_wifi_manager_config_t.nvs_partition`) instead of the default `nvs`
+  partition, scoping the hard reset to credentials. When `blifi_nvs` is absent,
+  blifi logs a loud warning and falls back to the default `nvs` partition.
+  **Migration:** existing boards read empty on first boot of this firmware and
+  re-provision once.
 
 ### Fixed
 - NimBLE host-task stack overflow when handling a scan request: moved the

@@ -31,6 +31,9 @@ static const char *TAG = "blifi_wifi";
 #define NVS_KEY_BSSID "bssid"
 #define NVS_KEY_CHAN  "chan"
 
+/** NVS partition holding credentials: the configured one, or the default "nvs". */
+static const char *creds_partition(void);
+
 typedef struct {
     bool                        initialized;
     blifi_wifi_manager_config_t cfg;
@@ -51,6 +54,13 @@ typedef struct {
 static blifi_wifi_ctx_t s;
 
 /* ------------------------------------------------------------------ helpers */
+
+static const char *creds_partition(void)
+{
+    return (s.cfg.nvs_partition && s.cfg.nvs_partition[0])
+               ? s.cfg.nvs_partition
+               : NVS_DEFAULT_PART_NAME;
+}
 
 const char *blifi_status_str(blifi_status_t status)
 {
@@ -335,7 +345,8 @@ esp_err_t blifi_wifi_manager_save_credentials(const blifi_wifi_credentials_t *cr
         return ESP_ERR_INVALID_ARG;
     }
     nvs_handle_t h;
-    ESP_RETURN_ON_ERROR(nvs_open(BLIFI_NVS_NAMESPACE, NVS_READWRITE, &h), TAG, "nvs_open");
+    ESP_RETURN_ON_ERROR(nvs_open_from_partition(creds_partition(), BLIFI_NVS_NAMESPACE,
+                                                NVS_READWRITE, &h), TAG, "nvs_open");
 
     esp_err_t err = nvs_set_str(h, NVS_KEY_SSID, creds->ssid);
     if (err == ESP_OK) err = nvs_set_str(h, NVS_KEY_PASS, creds->password);
@@ -364,7 +375,8 @@ esp_err_t blifi_wifi_manager_load_credentials(blifi_wifi_credentials_t *out)
         return ESP_ERR_INVALID_ARG;
     }
     nvs_handle_t h;
-    esp_err_t err = nvs_open(BLIFI_NVS_NAMESPACE, NVS_READONLY, &h);
+    esp_err_t err = nvs_open_from_partition(creds_partition(), BLIFI_NVS_NAMESPACE,
+                                            NVS_READONLY, &h);
     if (err != ESP_OK) {
         return (err == ESP_ERR_NVS_NOT_FOUND) ? ESP_ERR_NVS_NOT_FOUND : err;
     }
@@ -400,7 +412,8 @@ bool blifi_wifi_manager_has_credentials(void)
 esp_err_t blifi_wifi_manager_erase_credentials(void)
 {
     nvs_handle_t h;
-    esp_err_t err = nvs_open(BLIFI_NVS_NAMESPACE, NVS_READWRITE, &h);
+    esp_err_t err = nvs_open_from_partition(creds_partition(), BLIFI_NVS_NAMESPACE,
+                                            NVS_READWRITE, &h);
     if (err == ESP_ERR_NVS_NOT_FOUND) {
         return ESP_OK;
     }

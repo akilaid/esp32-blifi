@@ -50,6 +50,7 @@ typedef struct {
     uint32_t backoff_multiplier;       /*!< Delay growth factor per attempt */
     uint32_t connect_timeout_ms;       /*!< Per-attempt association timeout */
     bool     fast_fail_on_auth_error;  /*!< Give up immediately on wrong password */
+    const char *nvs_partition;         /*!< NVS partition for credentials; NULL = default "nvs" */
 } blifi_wifi_manager_config_t;
 
 /** Sensible defaults: 5 retries, 1s→30s backoff (×2), 15s timeout, fast-fail auth. */
@@ -60,15 +61,16 @@ typedef struct {
     .backoff_multiplier      = 2,     \
     .connect_timeout_ms      = 15000, \
     .fast_fail_on_auth_error = true,  \
+    .nvs_partition           = NULL,  \
 })
 
 /**
  * @brief Initialise the Wi-Fi station manager.
  *
  * Idempotently brings up esp_netif, the default event loop, a default STA netif,
- * and the Wi-Fi driver in STA mode, then registers Wi-Fi/IP handlers and opens
- * the `"blifi"` NVS namespace. NVS must already be initialised by the app
- * (`nvs_flash_init`).
+ * and the Wi-Fi driver in STA mode, then registers Wi-Fi/IP handlers. Credentials
+ * live in the `"blifi"` NVS namespace within `config->nvs_partition` (or the
+ * default `nvs` partition when NULL); that partition must already be initialised.
  *
  * @param config Configuration, or NULL for ::BLIFI_WIFI_MANAGER_DEFAULT_CONFIG.
  * @return ESP_OK on success, or an esp_err_t from the underlying init calls.
