@@ -17,10 +17,28 @@ extern "C" bool btInUse() { return true; }
 
 BlifiClass Blifi;
 
-bool BlifiClass::begin() { return beginWith(nullptr); }
-bool BlifiClass::begin(const char *deviceName) { return beginWith(deviceName); }
+bool BlifiClass::begin() {
+  blifi_config_t cfg = BLIFI_DEFAULT_CONFIG();
+  return beginCfg(cfg);
+}
 
-bool BlifiClass::beginWith(const char *deviceName) {
+bool BlifiClass::begin(const char *deviceName) {
+  blifi_config_t cfg = BLIFI_DEFAULT_CONFIG();
+  if (deviceName) cfg.device_name = deviceName;
+  return beginCfg(cfg);
+}
+
+bool BlifiClass::begin(const BlifiConfig &config) {
+  blifi_config_t cfg = BLIFI_DEFAULT_CONFIG();
+  cfg.device_name = config.deviceName;
+  cfg.reset_indicator.enable       = config.resetIndicator.enable;
+  cfg.reset_indicator.gpio         = (int8_t)config.resetIndicator.gpio;
+  cfg.reset_indicator.active_level = (uint8_t)(config.resetIndicator.activeLevel ? 1 : 0);
+  cfg.reset_indicator.pulse_ms     = config.resetIndicator.pulseMs;
+  return beginCfg(cfg);
+}
+
+bool BlifiClass::beginCfg(const blifi_config_t &cfg) {
   if (_started) return true;
 
   // The Arduino core normally initialises NVS already; be defensive.
@@ -33,8 +51,6 @@ bool BlifiClass::beginWith(const char *deviceName) {
   // Register the data-reset trampoline BEFORE blifi_init (init caches the flag).
   blifi_register_data_reset_callback(&BlifiClass::dataResetCb, this);
 
-  blifi_config_t cfg = BLIFI_DEFAULT_CONFIG();
-  if (deviceName) cfg.device_name = deviceName;
   if (blifi_init(&cfg) != ESP_OK) return false;
 
   esp_event_handler_instance_register(BLIFI_EVENT, ESP_EVENT_ANY_ID,

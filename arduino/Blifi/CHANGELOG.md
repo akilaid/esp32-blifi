@@ -18,6 +18,10 @@ versioned independently under [Semantic Versioning](https://semver.org/).
 - README documenting why PlatformIO is required (the stock Arduino IDE core is
   Bluedroid-only and can't build the NimBLE component or change bootloader
   config), build/upload steps, and the API.
+- `Blifi.begin(BlifiConfig)` overload exposing the optional hard-reset indicator
+  pin (§6.2): `resetIndicator{ enable, gpio, activeLevel, pulseMs }`. Enable the
+  feature via `CONFIG_BLIFI_RESET_INDICATOR_ENABLE=y` in `sdkconfig.defaults`, then
+  set the pin/level/pulse at runtime. Opt-in; off by default.
 
 ### Fixed (Arduino/ESP-IDF-5.5 integration — all in the wrapper/config, not the component)
 - **BLE controller wouldn't start** (`nimble_port_init: ESP_ERR_INVALID_STATE`):

@@ -77,6 +77,27 @@ void app_main(void) {
 `blifi_was_hard_reset()` reports whether this boot followed a hard reset (cached;
 reverts to false on the next normal boot).
 
+### 4. (Optional) Hard-reset indicator pin
+
+Drive a GPIO active when a hard reset is detected — wire an LED, relay, or
+optocoupler as a physical "credentials were wiped" signal, no app code needed.
+Configure via **menuconfig → Blifi Provisioning → Hard Reset Indicator** (or
+`sdkconfig.defaults`):
+
+```
+CONFIG_BLIFI_RESET_INDICATOR_ENABLE=y
+CONFIG_BLIFI_RESET_INDICATOR_GPIO=2            # e.g. onboard LED
+CONFIG_BLIFI_RESET_INDICATOR_ACTIVE_HIGH=y     # or ..._ACTIVE_LOW
+CONFIG_BLIFI_RESET_INDICATOR_PULSE_MS=2000     # 0 = hold until re-provisioned
+```
+
+`PULSE_MS=0` holds the pin asserted until the device is re-provisioned and back
+online (state machine reaches `CONNECTED`). The pin/level/pulse can also be
+overridden at runtime via `blifi_config_t.reset_indicator`. **Entirely opt-in:**
+when `CONFIG_BLIFI_RESET_INDICATOR_ENABLE` is off (default) the whole feature
+compiles out.
+
 > **Arduino:** the same options apply via a `sdkconfig.defaults` and `partitions.csv`
 > in the sketch folder (arduino-esp32 3.x). The Phase 7 Arduino wrapper exposes
-> `onDataResetRequested()` / `wasHardReset()`.
+> `onDataResetRequested()` / `wasHardReset()`, and `Blifi.begin(config)` for the
+> indicator pin.

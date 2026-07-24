@@ -282,6 +282,7 @@ static void wifi_event(void *arg, esp_event_base_t base, int32_t id, void *data)
     switch (id) {
     case BLIFI_EVENT_WIFI_CONNECTED:
         s.state = ST_CONNECTED;
+        blifi_hard_reset_indicator_clear(); /* release a "hold until re-provisioned" indicator */
         send_status(BLIFI_STATUS_WIFI_CONNECTED, &e->ip);
         break;
     case BLIFI_EVENT_WIFI_CONNECTING:
@@ -362,6 +363,7 @@ esp_err_t blifi_init(const blifi_config_t *config)
     }
     s.cfg = config ? *config : (blifi_config_t)BLIFI_DEFAULT_CONFIG();
     s.cfg.wifi.nvs_partition = resolve_creds_partition();
+    blifi_hard_reset_set_indicator(&s.cfg.reset_indicator);
     s.lock = xSemaphoreCreateRecursiveMutex();
     if (!s.lock) {
         return ESP_ERR_NO_MEM;

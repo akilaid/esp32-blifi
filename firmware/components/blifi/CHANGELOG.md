@@ -40,6 +40,14 @@ versioned independently under [Semantic Versioning](https://semver.org/).
   the app's `sdkconfig.defaults` (see README). The PoP stays in the default `nvs`
   partition, so it survives a hard reset (printed QR/sticker keeps working).
 
+- Optional hard-reset indicator pin (docs/plan.md §6.2): a `Kconfig.projbuild`
+  "Blifi Provisioning → Hard Reset Indicator" menu
+  (`CONFIG_BLIFI_RESET_INDICATOR_ENABLE`/`_GPIO`/`_ACTIVE_LEVEL`/`_PULSE_MS`) drives
+  a GPIO active when a hard reset is detected, driven from the `hard_reset` module.
+  `PULSE_MS=0` holds until re-provisioned (`CONNECTED`). Pin/level/pulse are also
+  runtime-overridable via `blifi_config_t.reset_indicator`. Fully opt-in — the whole
+  feature compiles out when disabled (default).
+
 ### Changed
 - Wi-Fi credentials now persist in the dedicated `blifi_nvs` partition (via
   `blifi_wifi_manager_config_t.nvs_partition`) instead of the default `nvs`

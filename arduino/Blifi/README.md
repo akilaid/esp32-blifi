@@ -77,6 +77,31 @@ linker/memory changes need a clean build). Design details:
 The software `Blifi.resetCredentials()` is the in-code "forget Wi-Fi" path and works
 regardless.
 
+## Hard-reset indicator pin (optional)
+
+Drive a GPIO active when a hard reset is detected (an LED / relay / optocoupler
+"credentials were wiped" signal). Two steps:
+
+1. Compile the feature in — add to `sdkconfig.defaults` (it's a Kconfig option, so
+   it can't be set from `begin()` alone) and rebuild clean:
+   ```
+   CONFIG_BLIFI_RESET_INDICATOR_ENABLE=y
+   ```
+2. Set the pin/level/pulse at runtime in the sketch:
+   ```cpp
+   BlifiConfig cfg;
+   cfg.resetIndicator.enable = true;
+   cfg.resetIndicator.gpio = 2;          // onboard LED on many boards
+   cfg.resetIndicator.activeLevel = HIGH;
+   cfg.resetIndicator.pulseMs = 2000;    // 0 = hold until re-provisioned
+   Blifi.begin(cfg);
+   ```
+   (Or set `CONFIG_BLIFI_RESET_INDICATOR_GPIO` / `_ACTIVE_*` / `_PULSE_MS` in
+   `sdkconfig.defaults` instead of the runtime fields.)
+
+Fully opt-in — with `CONFIG_BLIFI_RESET_INDICATOR_ENABLE` off (default) it compiles
+out.
+
 ## Notes
 
 - Requires the **pioarduino** platform (arduino-esp32 3.x / ESP-IDF 5.5), pinned

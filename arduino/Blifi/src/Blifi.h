@@ -32,12 +32,30 @@ extern "C" {
 #include <blifi.h>
 }
 
+/** Optional hard-reset indicator pin (see the README). Only takes effect when the
+ *  component is built with `CONFIG_BLIFI_RESET_INDICATOR_ENABLE=y` in
+ *  `sdkconfig.defaults`; these fields then override the Kconfig defaults. */
+struct BlifiResetIndicator {
+  bool enable = false;      ///< drive the pin on a hard reset
+  int gpio = -1;            ///< output GPIO
+  int activeLevel = HIGH;   ///< asserted level (HIGH or LOW)
+  uint32_t pulseMs = 2000;  ///< assert duration; 0 = hold until re-provisioned
+};
+
+/** Config for `Blifi.begin(config)`. */
+struct BlifiConfig {
+  const char *deviceName = nullptr;   ///< BLE name; null → auto "blifi-XXXX"
+  BlifiResetIndicator resetIndicator; ///< optional §6.2 indicator pin
+};
+
 class BlifiClass {
  public:
   /** Initialise + start provisioning. Uses the auto "blifi-XXXX" BLE name. */
   bool begin();
   /** Initialise + start with a custom BLE device name. */
   bool begin(const char *deviceName);
+  /** Initialise + start with full config (device name + hard-reset indicator). */
+  bool begin(const BlifiConfig &config);
 
   /** Called on every status change (connecting, connected, errors…). */
   void onStatusChanged(std::function<void(blifi_status_t)> cb);
@@ -60,7 +78,7 @@ class BlifiClass {
   const char *statusString(blifi_status_t status);
 
  private:
-  bool beginWith(const char *deviceName);
+  bool beginCfg(const blifi_config_t &cfg);
   static void eventHandler(void *arg, esp_event_base_t base, int32_t id, void *data);
   static void dataResetCb(void *arg);
 

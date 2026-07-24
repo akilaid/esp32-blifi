@@ -31,6 +31,7 @@ idf_component_register(
         esp_hw_support
         esp_app_format
         bootloader_support
+        esp_driver_gpio
         mbedtls
         bt
 )
