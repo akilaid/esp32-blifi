@@ -1,17 +1,25 @@
-# blifi_example
+# blifi example
 
-A new Flutter project.
+Minimal end-to-end demo of the [`blifi`](https://pub.dev/packages/blifi) package:
+scan for nearby blifi devices, connect with the device's Proof-of-Possession,
+list the Wi-Fi networks it sees, send credentials, and watch the provisioning
+status until the device is online.
 
-## Getting Started
+## Prerequisites
 
-This project is a starting point for a Flutter application.
+- A physical Android/iOS device with BLE (emulators have no Bluetooth).
+- An ESP32 nearby running the
+  [blifi firmware component](https://github.com/akilaid/esp32-blifi/tree/main/firmware/components/blifi)
+  in unprovisioned mode, and its Proof-of-Possession code (printed on the
+  device's serial console or QR sticker).
 
-A few resources to get you started if this is your first Flutter project:
+## Run
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```bash
+flutter run
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Everything lives in [`lib/main.dart`](https://github.com/akilaid/esp32-blifi/blob/main/flutter/packages/blifi/example/lib/main.dart).
+For a polished, full-featured app (QR provisioning, Material 3 UI), see the
+[demo app](https://github.com/akilaid/esp32-blifi/tree/main/flutter/apps/demo_app)
+in the same repository.

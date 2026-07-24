@@ -75,8 +75,9 @@ Errors are typed: catch `AuthenticationException` (wrong PoP),
 `WifiConnectionException` (with a `ProvisioningState`), `BleConnectionException`,
 or `ProvisioningTimeoutException` — all subtypes of `BlifiException`.
 
-See [`example/`](example/) for a runnable app.
+See [`example/`](https://github.com/akilaid/esp32-blifi/tree/main/flutter/packages/blifi/example)
+for a runnable app.
 
 ## License
 
-[MIT](LICENSE).
+[MIT](https://github.com/akilaid/esp32-blifi/blob/main/flutter/packages/blifi/LICENSE).
