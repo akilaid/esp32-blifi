@@ -1,21 +1,35 @@
-# Flutter package CI — STUB (Phase 0 scaffolding, no real steps yet).
-# Planned: analyze, test, `dart pub publish --dry-run`, and a pana score check
-# for flutter/packages/blifi.
+# Analyze, test, publish-dry-run and score the blifi Flutter package.
 name: flutter-package-ci
 
 on:
   push:
+    paths:
+      - 'flutter/packages/blifi/**'
+      - '.github/workflows/flutter-package-ci.yml'
   pull_request:
+    paths:
+      - 'flutter/packages/blifi/**'
+      - '.github/workflows/flutter-package-ci.yml'
 
 jobs:
   analyze-test:
-    name: analyze / test / publish-dry-run / pana (stub)
+    name: analyze / test / publish-dry-run / pana
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter/packages/blifi
     steps:
       - uses: actions/checkout@v4
-      - name: TODO
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - name: pub publish dry-run
+        run: dart pub publish --dry-run
+      - name: pana score (informational)
+        continue-on-error: true
         run: |
-          echo "TODO: dart analyze"
-          echo "TODO: dart test"
-          echo "TODO: dart pub publish --dry-run"
-          echo "TODO: pana score check"
+          dart pub global activate pana
+          dart pub global run pana --no-warning .

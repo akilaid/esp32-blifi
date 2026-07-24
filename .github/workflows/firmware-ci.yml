@@ -1,19 +1,30 @@
-# Firmware CI — STUB (Phase 0 scaffolding, no real steps yet).
-# Planned: build the `blifi` ESP-IDF component/examples with `idf.py build`
-# across a matrix of target boards.
+# Build the blifi ESP-IDF component (via its example project) across a matrix of
+# target chips. Trim the matrix or adjust the IDF version if needed.
 name: firmware-ci
 
 on:
   push:
+    paths:
+      - 'firmware/**'
+      - '.github/workflows/firmware-ci.yml'
   pull_request:
+    paths:
+      - 'firmware/**'
+      - '.github/workflows/firmware-ci.yml'
 
 jobs:
   build:
-    name: idf.py build (stub)
+    name: idf.py build (${{ matrix.target }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [esp32, esp32s3, esp32c3]
     steps:
       - uses: actions/checkout@v4
-      - name: TODO
-        run: |
-          echo "TODO: build firmware with esp-idf across target-board matrix"
-          echo "planned: espressif/esp-idf-ci-action + idf.py build"
+      - name: Build example for ${{ matrix.target }}
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: release-v5.4
+          target: ${{ matrix.target }}
+          path: firmware/components/blifi/examples/esp-idf-example

@@ -1,0 +1,62 @@
+# Cut an Arduino Library Manager release: tag + GitHub Release on the mirror repo
+# when arduino/Blifi/library.properties has a newer version than the mirror's
+# latest tag. Deliberately MANUAL (workflow_dispatch) — a human decides when a
+# version is ready for every Arduino IDE user. See ADR 0006.
+#
+# Requires the same `ARDUINO_MIRROR_PAT` (contents: write on the mirror repo).
+name: arduino-release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mirror repo (with tags)
+        uses: actions/checkout@v4
+        with:
+          repository: akilaid/esp32-blifi-arduino
+          token: ${{ secrets.ARDUINO_MIRROR_PAT }}
+          fetch-depth: 0
+
+      - name: Compare library.properties version to latest tag
+        id: check
+        run: |
+          version=$(grep -E '^version=' library.properties | head -1 | cut -d= -f2 | tr -d '[:space:]')
+          if [ -z "$version" ]; then
+            echo "::error::no version= in library.properties (is the mirror synced?)"; exit 1
+          fi
+          latest=$(git tag -l 'v*' --sort=-v:refname | head -1 | sed 's/^v//')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "latest=${latest:-<none>}" >> "$GITHUB_OUTPUT"
+          if [ -z "$latest" ]; then
+            newer=true
+          elif [ "$version" = "$latest" ]; then
+            newer=false
+          else
+            top=$(printf '%s\n%s\n' "$version" "$latest" | sort -V | tail -1)
+            [ "$top" = "$version" ] && newer=true || newer=false
+          fi
+          echo "newer=$newer" >> "$GITHUB_OUTPUT"
+          echo "library.properties=$version, latest tag=${latest:-<none>}, newer=$newer"
+
+      - name: Tag + create release
+        if: steps.check.outputs.newer == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.ARDUINO_MIRROR_PAT }}
+          V: ${{ steps.check.outputs.version }}
+        run: |
+          git config user.name "blifi-mirror[bot]"
+          git config user.email "blifi-mirror@users.noreply.github.com"
+          git tag "v$V"
+          git push origin "v$V"
+          gh release create "v$V" \
+            --repo akilaid/esp32-blifi-arduino \
+            --title "v$V" \
+            --notes "Blifi Arduino library v$V — mirrored from akilaid/esp32-blifi. The Arduino Library Manager picks up this tagged release automatically."
+
+      - name: Nothing to release
+        if: steps.check.outputs.newer != 'true'
+        run: |
+          echo "Version ${{ steps.check.outputs.version }} is not newer than the latest tag (${{ steps.check.outputs.latest }}). Bump version= in arduino/Blifi/library.properties first."

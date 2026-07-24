@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security report
+    url: https://github.com/akilaid/esp32-blifi/blob/main/docs/security.md
+    about: Please review the security doc before filing a public issue with exploit details.

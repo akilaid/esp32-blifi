@@ -1,19 +1,35 @@
-# Flutter app CI — STUB (Phase 0 scaffolding, no real steps yet).
-# Planned: analyze, test, and build the APK for flutter/apps/demo_app.
+# Analyze, test, and build the demo app APK.
 name: flutter-app-ci
 
 on:
   push:
+    paths:
+      - 'flutter/apps/demo_app/**'
+      - 'flutter/packages/blifi/**'   # demo path-depends on the package
+      - '.github/workflows/flutter-app-ci.yml'
   pull_request:
+    paths:
+      - 'flutter/apps/demo_app/**'
+      - 'flutter/packages/blifi/**'
+      - '.github/workflows/flutter-app-ci.yml'
 
 jobs:
   build-apk:
-    name: analyze / test / build apk (stub)
+    name: analyze / test / build apk
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter/apps/demo_app
     steps:
       - uses: actions/checkout@v4
-      - name: TODO
-        run: |
-          echo "TODO: flutter analyze"
-          echo "TODO: flutter test"
-          echo "TODO: flutter build apk"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build apk --debug
