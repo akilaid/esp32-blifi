@@ -6,6 +6,10 @@ versioned independently under [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.1.1] — 2026-07-25
+
 ### Added
 - Minimal example (`examples/minimal`): the smallest useful integration —
   provisioning plus the reset pin and reset-indicator LED via pure
