@@ -4,6 +4,11 @@ All notable changes to the Flutter package are documented here. Format based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this package is
 versioned independently under [Semantic Versioning](https://semver.org/).
 
+## 0.1.1 - 2026-07-25
+
+No functional changes; verifies the automated tag-triggered release pipeline
+(GitHub Actions → pub.dev).
+
 ## 0.1.0 - 2026-07-23
 
 Initial release.

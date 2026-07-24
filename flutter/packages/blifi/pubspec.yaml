@@ -2,7 +2,7 @@ name: blifi
 description: >-
   BLE-based Wi-Fi provisioning for ESP32: send Wi-Fi credentials over an
   encrypted (X25519 + AES-256-GCM) Bluetooth Low Energy session — no hotspot.
-version: 0.1.0
+version: 0.1.1
 repository: https://github.com/akilaid/esp32-blifi
 homepage: https://github.com/akilaid/esp32-blifi
 issue_tracker: https://github.com/akilaid/esp32-blifi/issues
