@@ -5,7 +5,9 @@ provisioning: NimBLE GATT transport, X25519 + AES-256-GCM session security,
 binary framing over JSON payloads, Wi-Fi scan/connect/NVS persistence, and the
 provisioning state machine.
 
-See [`examples/esp-idf-example`](examples/esp-idf-example) for a runnable
+Two runnable examples: [`examples/minimal`](examples/minimal) — the smallest
+integration (~20 lines, incl. reset pin + reset LED, no console) — and
+[`examples/esp-idf-example`](examples/esp-idf-example), an interactive
 serial-console demo. Public API is in [`include/blifi.h`](include/blifi.h):
 `blifi_init` → `blifi_start`, plus `blifi_is_provisioned`, `blifi_reset_credentials`
 (software reset), `blifi_get_pop`, and the hard-reset hooks below. Status/events
