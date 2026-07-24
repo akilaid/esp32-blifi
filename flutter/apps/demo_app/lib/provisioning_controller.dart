@@ -7,6 +7,8 @@ import 'package:permission_handler/permission_handler.dart';
 /// Steps of the provisioning flow the UI renders.
 enum ProvisioningStage {
   permissions,
+  home,
+  qrScan,
   scanning,
   connecting,
   wifiList,
@@ -28,6 +30,7 @@ class ProvisioningController extends ChangeNotifier {
   List<WifiNetwork> networks = const [];
   BlifiDevice? device;
   String? connectedSsid;
+  String connectingLabel = '';
   ProvisioningStatus? status;
   String? errorMessage;
   bool scanComplete = false;
@@ -41,7 +44,7 @@ class ProvisioningController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Request BLE runtime permissions. Returns true if provisioning can proceed.
+  /// Request BLE runtime permissions, then go to the home screen.
   Future<bool> requestPermissions() async {
     final result = await [
       Permission.bluetoothScan,
@@ -52,15 +55,29 @@ class ProvisioningController extends ChangeNotifier {
         ((result[Permission.bluetoothScan]?.isGranted ?? false) &&
             (result[Permission.bluetoothConnect]?.isGranted ?? false));
     if (ok) {
-      await startScan();
+      errorMessage = null;
+      _set(ProvisioningStage.home);
     } else {
-      errorMessage = 'Bluetooth permissions are required.';
+      errorMessage = 'Bluetooth permission is required to continue.';
       _set(ProvisioningStage.permissions);
     }
     return ok;
   }
 
-  /// Start (or restart) scanning for blifi devices.
+  /// Open the QR scanner (requests camera permission first).
+  Future<bool> openQrScanner() async {
+    final cam = await Permission.camera.request();
+    if (!cam.isGranted) {
+      errorMessage = 'Camera permission is required to scan a QR code.';
+      notifyListeners();
+      return false;
+    }
+    errorMessage = null;
+    _set(ProvisioningStage.qrScan);
+    return true;
+  }
+
+  /// Start (or restart) scanning for blifi devices (manual selection path).
   Future<void> startScan() async {
     await _scanSub?.cancel();
     devices.clear();
@@ -85,11 +102,42 @@ class ProvisioningController extends ChangeNotifier {
     );
   }
 
-  /// Connect + handshake with [pop], then load the device's Wi-Fi networks.
+  /// QR path: find the named device, then connect with its PoP.
+  Future<void> connectViaQr(String name, String? pop) async {
+    errorMessage = null;
+    connectingLabel = 'Looking for $name…';
+    _set(ProvisioningStage.connecting);
+    BlifiDevice? found;
+    try {
+      await for (final d in _blifi.scanForDevices(timeout: const Duration(seconds: 15))) {
+        if (d.name == name) {
+          found = d;
+          break;
+        }
+      }
+    } catch (e) {
+      errorMessage = _messageFor(e);
+      _set(ProvisioningStage.failure);
+      return;
+    }
+    if (found == null) {
+      errorMessage = 'Couldn’t find “$name” nearby. Make sure it’s powered on.';
+      _set(ProvisioningStage.failure);
+      return;
+    }
+    await _doConnect(found, pop);
+  }
+
+  /// Manual path: connect to a tapped device with the entered PoP.
   Future<void> connect(BlifiDevice target, String pop) async {
+    await _scanSub?.cancel();
+    await _doConnect(target, pop);
+  }
+
+  Future<void> _doConnect(BlifiDevice target, String? pop) async {
     device = target;
     errorMessage = null;
-    await _scanSub?.cancel();
+    connectingLabel = 'Establishing a secure session…';
     _set(ProvisioningStage.connecting);
     try {
       final session = await _blifi.connect(target, proofOfPossession: pop);
@@ -101,12 +149,14 @@ class ProvisioningController extends ChangeNotifier {
           _set(ProvisioningStage.failure);
         },
       );
+      connectingLabel = 'Fetching nearby Wi-Fi networks…';
+      notifyListeners();
       final nets = await session.scanWifiNetworks();
       networks = nets..sort((a, b) => b.rssi.compareTo(a.rssi));
       _set(ProvisioningStage.wifiList);
     } on AuthenticationException {
-      errorMessage = 'Wrong Proof-of-Possession — try again.';
-      await startScan();
+      errorMessage = 'Wrong Proof-of-Possession — double-check and try again.';
+      _set(ProvisioningStage.failure);
     } catch (e) {
       errorMessage = _messageFor(e);
       _set(ProvisioningStage.failure);
@@ -142,7 +192,7 @@ class ProvisioningController extends ChangeNotifier {
   /// IP address once connected.
   String? get ipAddress => _session?.ipAddress;
 
-  /// From a failure, go back to the network list to try again.
+  /// From a failure, go back to the network list (if the session is alive).
   void retry() {
     errorMessage = null;
     if (_session != null) {
@@ -152,23 +202,26 @@ class ProvisioningController extends ChangeNotifier {
     }
   }
 
-  /// Disconnect and return to scanning (the app-side "forget"/re-provision).
+  /// Disconnect and return to the home screen.
   Future<void> startOver() async {
     await _statusSub?.cancel();
     _statusSub = null;
+    await _scanSub?.cancel();
+    _scanSub = null;
     await _session?.disconnect();
     _session = null;
     networks = const [];
     device = null;
     connectedSsid = null;
     status = null;
-    await startScan();
+    errorMessage = null;
+    _set(ProvisioningStage.home);
   }
 
   String _errorText(ProvisioningState s) => switch (s) {
         ProvisioningState.wifiAuthError => 'Wrong Wi-Fi password.',
-        ProvisioningState.wifiNotFound => 'Network not found.',
-        ProvisioningState.wifiTimeout => 'Connection timed out.',
+        ProvisioningState.wifiNotFound => 'That network wasn’t found.',
+        ProvisioningState.wifiTimeout => 'The connection timed out.',
         ProvisioningState.wifiDisconnected => 'Disconnected from the network.',
         _ => 'Provisioning failed (${s.name}).',
       };

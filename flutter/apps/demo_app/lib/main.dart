@@ -1,15 +1,19 @@
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import 'provisioning_controller.dart';
+import 'screens/connecting_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/permission_screen.dart';
 import 'screens/progress_screen.dart';
+import 'screens/qr_scan_screen.dart';
 import 'screens/result_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/wifi_screen.dart';
 
 void main() => runApp(const BlifiDemoApp());
 
-/// A generic, reusable demo of BLE Wi-Fi provisioning with the `blifi` package.
+/// A generic, reusable Material 3 Expressive demo of BLE Wi-Fi provisioning.
 class BlifiDemoApp extends StatefulWidget {
   const BlifiDemoApp({super.key});
 
@@ -26,102 +30,90 @@ class _BlifiDemoAppState extends State<BlifiDemoApp> {
     super.dispose();
   }
 
+  ThemeData _theme(ColorScheme scheme) => ThemeData(
+        colorScheme: scheme,
+        useMaterial3: true,
+        // Opt into the expressive (2024+) progress indicators app-wide.
+        // ignore: deprecated_member_use
+        progressIndicatorTheme: const ProgressIndicatorThemeData(year2023: false),
+        appBarTheme: const AppBarTheme(centerTitle: false),
+        cardTheme: CardThemeData(
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(56),
+            shape: const StadiumBorder(),
+            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'blifi',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(colorSchemeSeed: Colors.blue, useMaterial3: true),
-      home: _Home(_controller),
-    );
-  }
-}
-
-class _Home extends StatelessWidget {
-  const _Home(this.controller);
-  final ProvisioningController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: controller,
-      builder: (context, _) => switch (controller.stage) {
-        ProvisioningStage.permissions => _PermissionGate(controller),
-        ProvisioningStage.scanning => ScanScreen(controller),
-        ProvisioningStage.connecting => const _Loading('Connecting…'),
-        ProvisioningStage.wifiList => WifiScreen(controller),
-        ProvisioningStage.provisioning => ProgressScreen(controller),
-        ProvisioningStage.success => ResultScreen(controller, success: true),
-        ProvisioningStage.failure => ResultScreen(controller, success: false),
+    const seed = Color(0xFF4F5BD5); // expressive indigo, used if no dynamic color
+    return DynamicColorBuilder(
+      builder: (ColorScheme? light, ColorScheme? dark) {
+        final lightScheme = light ?? ColorScheme.fromSeed(seedColor: seed);
+        final darkScheme = dark ??
+            ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.dark);
+        return MaterialApp(
+          title: 'blifi',
+          debugShowCheckedModeBanner: false,
+          theme: _theme(lightScheme),
+          darkTheme: _theme(darkScheme),
+          themeMode: ThemeMode.system,
+          home: _Router(_controller),
+        );
       },
     );
   }
 }
 
-class _PermissionGate extends StatelessWidget {
-  const _PermissionGate(this.controller);
+/// Renders the current stage with a smooth fade-through transition.
+class _Router extends StatelessWidget {
+  const _Router(this.controller);
   final ProvisioningController controller;
 
+  Widget _screenFor(ProvisioningStage stage) => switch (stage) {
+        ProvisioningStage.permissions => PermissionScreen(controller),
+        ProvisioningStage.home => HomeScreen(controller),
+        ProvisioningStage.qrScan => QrScanScreen(controller),
+        ProvisioningStage.scanning => ScanScreen(controller),
+        ProvisioningStage.connecting => ConnectingScreen(controller),
+        ProvisioningStage.wifiList => WifiScreen(controller),
+        ProvisioningStage.provisioning => ProgressScreen(controller),
+        ProvisioningStage.success => ResultScreen(controller, success: true),
+        ProvisioningStage.failure => ResultScreen(controller, success: false),
+      };
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Icon(Icons.bluetooth, size: 96),
-              const SizedBox(height: 16),
-              Text('blifi provisioning',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall),
-              const SizedBox(height: 8),
-              const Text(
-                'Set up an ESP32’s Wi-Fi over Bluetooth. This app needs '
-                'Bluetooth (and, on older Android, Location) permission to scan.',
-                textAlign: TextAlign.center,
-              ),
-              if (controller.errorMessage != null) ...[
-                const SizedBox(height: 16),
-                Text(controller.errorMessage!,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                TextButton(onPressed: openAppSettings, child: const Text('Open settings')),
-              ],
-              const SizedBox(height: 32),
-              FilledButton.icon(
-                key: const Key('grant_button'),
-                onPressed: controller.requestPermissions,
-                icon: const Icon(Icons.check),
-                label: const Text('Grant & scan'),
-              ),
-            ],
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final stage = controller.stage;
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 420),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.03),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Loading extends StatelessWidget {
-  const _Loading(this.label);
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 24),
-            Text(label),
-          ],
-        ),
-      ),
+          child: KeyedSubtree(
+            key: ValueKey(stage),
+            child: _screenFor(stage),
+          ),
+        );
+      },
     );
   }
 }

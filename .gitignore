@@ -37,6 +37,9 @@ flutter/packages/**/pubspec.lock
 *.keystore
 *.jks
 
+# Locally generated, device-specific provisioning QR codes
+docs/qr/
+
 # Editors / IDE
 .idea/
 .vscode/
