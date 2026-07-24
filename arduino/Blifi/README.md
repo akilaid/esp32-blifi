@@ -63,19 +63,24 @@ The `blifi` component is pulled automatically from the monorepo via
 This project **enables** the bootloader factory reset (something the plain Arduino
 IDE can't do). Hold **GPIO13 (D13) → GND for 3 seconds** as the board powers on and
 the bootloader erases the `blifi_nvs` partition — clearing the Wi-Fi credentials
-before the app even starts. On the next boot, `Blifi.wasHardReset()` returns true
-and your `onDataResetRequested()` callback fires so you can wipe your own data. The
-**PoP survives** (it lives in the default `nvs` partition), so a printed QR/sticker
-keeps working.
+before the app even starts. The **PoP survives** (it lives in the default `nvs`
+partition), so a printed QR/sticker keeps working, and the device returns to
+provisioning.
+
+> **Known limitation on this build:** the bootloader *erase* works, but the
+> **app-side detection does not fire** here — `wasHardReset()` stays false,
+> `onDataResetRequested()` and the `HARD_RESET_TRIGGERED` event don't run, and the
+> §6.2 indicator pin won't light. On the Arduino/PlatformIO (ESP-IDF 5.5) stack the
+> bootloader's RTC-retain flag is clobbered before the app reads it; the full
+> detection chain works only when the `blifi` component is built with a standalone
+> **ESP-IDF (`idf.py`)** project. Use `Blifi.resetCredentials()` (software) for an
+> in-code "forget Wi-Fi" that works regardless.
 
 Configured in `sdkconfig.defaults` (`CONFIG_BOOTLOADER_FACTORY_RESET`, GPIO13, low,
 3 s, erase `blifi_nvs`) + the `blifi_nvs` row in `partitions.csv`. To change the pin
 or hold time, edit those and **rebuild clean** (`pio run -t fullclean` first —
 linker/memory changes need a clean build). Design details:
 [component hard-reset guide](../../firmware/components/blifi/README.md).
-
-The software `Blifi.resetCredentials()` is the in-code "forget Wi-Fi" path and works
-regardless.
 
 ## Hard-reset indicator pin (optional)
 
@@ -101,6 +106,10 @@ Drive a GPIO active when a hard reset is detected (an LED / relay / optocoupler
 
 Fully opt-in — with `CONFIG_BLIFI_RESET_INDICATOR_ENABLE` off (default) it compiles
 out.
+
+> Like the other app-side hard-reset hooks, the indicator fires only on a
+> standalone **ESP-IDF** build; app-side detection is unavailable on the
+> Arduino/PlatformIO stack (see the limitation above).
 
 ## Notes
 

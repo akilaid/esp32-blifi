@@ -97,7 +97,9 @@ overridden at runtime via `blifi_config_t.reset_indicator`. **Entirely opt-in:**
 when `CONFIG_BLIFI_RESET_INDICATOR_ENABLE` is off (default) the whole feature
 compiles out.
 
-> **Arduino:** the same options apply via a `sdkconfig.defaults` and `partitions.csv`
-> in the sketch folder (arduino-esp32 3.x). The Phase 7 Arduino wrapper exposes
-> `onDataResetRequested()` / `wasHardReset()`, and `Blifi.begin(config)` for the
-> indicator pin.
+> **Arduino:** the same options apply via `sdkconfig.defaults` / `partitions.csv`,
+> and the `Blifi` wrapper exposes `onDataResetRequested()` / `wasHardReset()` and
+> `Blifi.begin(config)`. Caveat: on the Arduino/PlatformIO (ESP-IDF 5.5) build the
+> bootloader *erase* works but **app-side detection does not** (the RTC-retain flag
+> is clobbered), so `wasHardReset()`, the callback/event, and this indicator only
+> fire when the component is built with a standalone ESP-IDF (`idf.py`) project.

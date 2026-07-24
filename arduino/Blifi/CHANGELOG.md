@@ -38,8 +38,13 @@ versioned independently under [Semantic Versioning](https://semver.org/).
 - Verified on hardware: full BLE provisioning (handshake → scan list → credentials
   → Wi-Fi connect → `Online!`), no crash. The IDF-6.0 `blifi` component builds
   unchanged on ESP-IDF 5.5.
-- Reset-pin hard reset is **enabled** and coexists with BLE: hold GPIO13 → GND for
-  3 s at boot to factory-reset (bootloader erases `blifi_nvs`; PoP preserved).
-  `wasHardReset()` / `onDataResetRequested()` are live. Configured via
-  `sdkconfig.defaults` + `partitions.csv`. Note: changing linker/memory config
+- Reset-pin hard reset (bootloader erase) is **enabled** and coexists with BLE:
+  hold GPIO13 → GND for 3 s at boot to erase `blifi_nvs` (PoP preserved). Configured
+  via `sdkconfig.defaults` + `partitions.csv`. Note: changing linker/memory config
   (like enabling this) needs a clean rebuild (`pio run -t fullclean`).
+- **Known limitation:** the bootloader erase works, but app-side hard-reset
+  detection (`wasHardReset()`, `onDataResetRequested()`, the `HARD_RESET_TRIGGERED`
+  event, and the §6.2 indicator pin) does **not** fire on the Arduino/PlatformIO
+  (ESP-IDF 5.5) stack — the bootloader RTC-retain flag is clobbered before the app
+  reads it. Those work only on a standalone ESP-IDF (`idf.py`) build. Use
+  `resetCredentials()` for an in-code reset.

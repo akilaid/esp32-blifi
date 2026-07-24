@@ -62,11 +62,14 @@ class BlifiClass {
   /** Called once the device is online, with its IP address. */
   void onProvisioned(std::function<void(IPAddress)> cb);
   /** Called on the boot after a hard reset so you can wipe your own data.
-   *  (Fires only under the PlatformIO/IDF build — see the README.) */
+   *  NOTE: app-side hard-reset detection does NOT fire on this Arduino/PlatformIO
+   *  build (the bootloader still erases credentials; only the standalone ESP-IDF
+   *  build detects it in-app). See the README. */
   void onDataResetRequested(std::function<void()> cb);
 
-  /** True if this boot followed a reset-pin hard reset (always false in the
-   *  Arduino IDE build; functional under PlatformIO/IDF). */
+  /** True if this boot followed a reset-pin hard reset. Always false on the
+   *  Arduino/PlatformIO build (app-side detection is unavailable there); works
+   *  only on a standalone ESP-IDF build. */
   bool wasHardReset();
   /** True if Wi-Fi credentials are stored. */
   bool isProvisioned();
