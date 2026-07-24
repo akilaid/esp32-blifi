@@ -1,0 +1,34 @@
+# Publish the blifi Flutter package to pub.dev when a release tag is pushed.
+#
+# Release loop: bump `version:` in flutter/packages/blifi/pubspec.yaml + add the
+# CHANGELOG section on dev → PR → merge → tag the merge commit:
+#   git tag blifi-vX.Y.Z <merge-commit> && git push origin blifi-vX.Y.Z
+# The tag version must match pubspec.yaml or pub.dev rejects the upload.
+#
+# Auth is OIDC (no long-lived secret): pub.dev must have automated publishing
+# enabled for this package (Admin tab → GitHub Actions, repository
+# akilaid/esp32-blifi, tag pattern blifi-v{{version}}). Note pub.dev only allows
+# enabling this for an existing package, so v0.1.0 was published manually.
+name: flutter-package-publish
+
+on:
+  push:
+    tags:
+      - 'blifi-v[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # pub.dev OIDC token exchange
+    defaults:
+      run:
+        working-directory: flutter/packages/blifi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - name: Publish to pub.dev
+        run: dart pub publish --force
