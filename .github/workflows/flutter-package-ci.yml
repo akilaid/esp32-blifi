@@ -3,10 +3,12 @@ name: flutter-package-ci
 
 on:
   push:
+    branches: [main]
     paths:
       - 'flutter/packages/blifi/**'
       - '.github/workflows/flutter-package-ci.yml'
   pull_request:
+    branches: [main]
     paths:
       - 'flutter/packages/blifi/**'
       - '.github/workflows/flutter-package-ci.yml'

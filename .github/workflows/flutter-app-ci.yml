@@ -3,11 +3,13 @@ name: flutter-app-ci
 
 on:
   push:
+    branches: [main]
     paths:
       - 'flutter/apps/demo_app/**'
       - 'flutter/packages/blifi/**'   # demo path-depends on the package
       - '.github/workflows/flutter-app-ci.yml'
   pull_request:
+    branches: [main]
     paths:
       - 'flutter/apps/demo_app/**'
       - 'flutter/packages/blifi/**'

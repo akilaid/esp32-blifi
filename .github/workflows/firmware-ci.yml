@@ -4,10 +4,12 @@ name: firmware-ci
 
 on:
   push:
+    branches: [main]
     paths:
       - 'firmware/**'
       - '.github/workflows/firmware-ci.yml'
   pull_request:
+    branches: [main]
     paths:
       - 'firmware/**'
       - '.github/workflows/firmware-ci.yml'
