@@ -1,7 +1,9 @@
-description: "Interactive serial-console demo of blifi's Wi-Fi manager: scan, connect, persist credentials to NVS, and watch the retry/backoff state machine (no BLE)."
 dependencies:
   akilaid/blifi:
-    version: "*"
+    # Pinned range (not "*") so the registry can resolve this back-dependency
+    # during server-side example processing; matches how espressif/led_strip
+    # and esp-iot-solution/button declare their example manifests.
+    version: "^0.1"
     # Inside the monorepo (and CI) build against the local component; when this
     # example is extracted via `idf.py create-project-from-example`, the path
     # does not exist and the component is fetched from the registry instead.
