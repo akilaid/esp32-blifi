@@ -20,7 +20,7 @@ extern "C" {
  *
  * The underlying flag is consumed (cleared) on first read, so this must be
  * called exactly once, early in ::blifi_init. Safe to call when the factory
- * reset feature is disabled — it simply caches false.
+ * reset feature is disabled - it simply caches false.
  */
 void blifi_hard_reset_init_on_boot(void);
 

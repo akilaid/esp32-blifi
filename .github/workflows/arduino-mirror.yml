@@ -4,7 +4,7 @@
 #
 # Requires a fine-grained PAT `ARDUINO_MIRROR_PAT` with `contents: write` scoped
 # ONLY to akilaid/esp32-blifi-arduino (the default GITHUB_TOKEN cannot push to
-# another repository). That secret must be created manually — see the ADR.
+# another repository). That secret must be created manually - see the ADR.
 name: arduino-mirror
 
 on:
@@ -53,7 +53,7 @@ jobs:
           git config user.email "blifi-mirror@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then
-            echo "mirror already up to date — nothing to push"
+            echo "mirror already up to date - nothing to push"
             exit 0
           fi
           git commit -m "Sync from esp32-blifi@${GITHUB_SHA::7}"

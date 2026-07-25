@@ -1,4 +1,4 @@
-# blifi — BLE-based Wi-Fi provisioning for ESP32.
+# blifi - BLE-based Wi-Fi provisioning for ESP32.
 # Wi-Fi core + protocol framing + PSA session crypto + NimBLE transport +
 # provisioning state machine.
 idf_component_register(

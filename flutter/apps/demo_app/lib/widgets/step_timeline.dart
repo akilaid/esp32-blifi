@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 /// A vertical step timeline: past steps checked, the current one active
-/// (spinner), future steps pending — so progress always reads as moving.
+/// (spinner), future steps pending - so progress always reads as moving.
 class StepTimeline extends StatelessWidget {
   const StepTimeline({super.key, required this.steps, required this.activeIndex});
 

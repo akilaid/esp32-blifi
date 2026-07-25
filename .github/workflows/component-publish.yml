@@ -1,6 +1,6 @@
 # Publish the blifi ESP-IDF component to the ESP Component Registry
 # (https://components.espressif.com, id `akilaid/blifi`). Deliberately MANUAL
-# (workflow_dispatch) — a human decides when a version is ready, same policy as
+# (workflow_dispatch) - a human decides when a version is ready, same policy as
 # arduino-release. The registry rejects re-uploads of an existing version, so
 # bump `version:` in firmware/components/blifi/idf_component.yml first.
 #
@@ -23,6 +23,6 @@ jobs:
         with:
           namespace: akilaid
           name: blifi
-          # Version comes from idf_component.yml `version:` — not overridden here.
+          # Version comes from idf_component.yml `version:` - not overridden here.
           directories: firmware/components/blifi
           api_token: ${{ secrets.IDF_COMPONENT_API_TOKEN }}

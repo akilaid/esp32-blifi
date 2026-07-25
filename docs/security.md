@@ -1,6 +1,6 @@
 # blifi Security Design
 
-**Status:** v1 — reference document, implemented identically by the `blifi`
+**Status:** v1 - reference document, implemented identically by the `blifi`
 ESP-IDF component and the `blifi` Flutter package. Wire formats are in
 [`protocol-spec.md`](protocol-spec.md); rationale in
 [`adr/0001-security-scheme.md`](adr/0001-security-scheme.md).
@@ -14,14 +14,14 @@ an active man-in-the-middle who does not know the device's Proof-of-Possession.
 ## 1. Threat model
 
 **In scope (defended):**
-- **Passive eavesdropper** sniffing BLE — must not learn SSID/password.
-- **Active MITM** relaying/altering BLE traffic — must not obtain the session
+- **Passive eavesdropper** sniffing BLE - must not learn SSID/password.
+- **Active MITM** relaying/altering BLE traffic - must not obtain the session
   key or inject/modify credentials undetected.
 - **Replay** of previously captured frames.
 
 **Out of scope (v1):**
 - A compromised phone or malicious provisioning app (it holds the plaintext).
-- Physical extraction from the device (mitigated by flash/NVS encryption — §7).
+- Physical extraction from the device (mitigated by flash/NVS encryption - §7).
 - Denial of service by radio jamming.
 
 ---
@@ -46,7 +46,7 @@ Firmware uses mbedTLS (bundled with ESP-IDF): `mbedtls_ecdh` with
 1. App reads **Device-Info** (plaintext) and learns `pop_required`.
 2. Both sides generate an **ephemeral X25519 keypair**. Public keys are exchanged
    as raw 32-byte values via `HS_PUBKEY` (app writes first; device notifies its
-   own). Ephemeral keys give **forward secrecy** — a later key compromise cannot
+   own). Ephemeral keys give **forward secrecy** - a later key compromise cannot
    decrypt a past session.
 3. Both compute the ECDH shared secret `ecdh` (32 bytes).
 4. Both derive the session keys (§4), mixing in the **PoP**.
@@ -74,7 +74,7 @@ K_confirm = HKDF-Expand(PRK, "blifi/v1 confirm",      32)
 
 Mixing PoP into the **secret** IKM is the crux: an attacker who observes the
 public keys but does not know the PoP derives a *different* `PRK`, so their
-session keys and confirmation tag will not match — exactly the property ESP-IDF's
+session keys and confirmation tag will not match - exactly the property ESP-IDF's
 own `protocomm` security schemes rely on. Using the two public keys as the HKDF
 salt binds the derived keys to this specific handshake transcript.
 
@@ -106,7 +106,7 @@ clean `AUTH_FAILED`.
 
 - Each direction encrypts with its own key and a **strictly increasing 32-bit
   counter** starting at 0; nonce = `0^64 ‖ counter`. Never reuse a counter under
-  a key (GCM nonce reuse is catastrophic — separate keys + monotonic counters
+  a key (GCM nonce reuse is catastrophic - separate keys + monotonic counters
   guarantee this within a session, and ephemeral keys make every session fresh).
 - The counter is sent in each record; the receiver **rejects any counter ≤ the
   last accepted** on that key, giving replay protection. Out-of-range or
@@ -128,7 +128,7 @@ clean `AUTH_FAILED`.
   **logged once over UART** for whoever flashes the device. The value is stable
   across reboots until credentials are reset.
 - **Distribution:** the default "read it off serial" model suits hobby/maker use.
-  The PoP source is **swappable** — an OEM can inject a per-device PoP printed on
+  The PoP source is **swappable** - an OEM can inject a per-device PoP printed on
   a QR label/sticker without any protocol change. This trust assumption is stated
   here explicitly so it is never an undocumented default.
 - **Online brute-force resistance:** ~40 bits is ample against remote guessing,

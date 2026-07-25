@@ -1,4 +1,4 @@
-# Changelog — blifi (ESP-IDF component)
+# Changelog - blifi (ESP-IDF component)
 
 All notable changes to the firmware component are documented here. Format based
 on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this component is
@@ -8,14 +8,24 @@ versioned independently under [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
-## [0.1.1] — 2026-07-25
+## [0.1.2] - 2026-07-25
+
+### Changed
+- Docs only: removed em-dashes throughout the README, headers, and code comments
+  (hyphens/colons instead). No code or API changes.
+- Both example manifests now carry an author-written `description` field, so the
+  ESP Component Registry shows those instead of an auto-generated summary.
+- README links the hard-reset ADR by absolute GitHub URL; the old relative path
+  pointed outside the packaged component and broke on the registry.
+
+## [0.1.1] - 2026-07-25
 
 ### Added
-- Minimal example (`examples/minimal`): the smallest useful integration —
+- Minimal example (`examples/minimal`): the smallest useful integration -
   provisioning plus the reset pin and reset-indicator LED via pure
   configuration, without the serial-console commands of `esp-idf-example`.
 
-## [0.1.0] — 2026-07-24
+## [0.1.0] - 2026-07-24
 
 First public release on the ESP Component Registry (`akilaid/blifi`).
 
@@ -58,7 +68,7 @@ First public release on the ESP Component Registry (`akilaid/blifi`).
   (`CONFIG_BLIFI_RESET_INDICATOR_ENABLE`/`_GPIO`/`_ACTIVE_LEVEL`/`_PULSE_MS`) drives
   a GPIO active when a hard reset is detected, driven from the `hard_reset` module.
   `PULSE_MS=0` holds until re-provisioned (`CONNECTED`). Pin/level/pulse are also
-  runtime-overridable via `blifi_config_t.reset_indicator`. Fully opt-in — the whole
+  runtime-overridable via `blifi_config_t.reset_indicator`. Fully opt-in - the whole
   feature compiles out when disabled (default).
 
 ### Changed

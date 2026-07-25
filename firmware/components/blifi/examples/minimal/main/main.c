@@ -4,8 +4,8 @@
  *
  * The whole integration is ~20 lines in app_main(): init NVS, init blifi with
  * the default config, register the optional hard-reset hook, start. Everything
- * else — the reset *pin* (bootloader factory reset on GPIO13) and the reset
- * *LED* (GPIO2 pulses when credentials were wiped) — is configuration, not
+ * else - the reset *pin* (bootloader factory reset on GPIO13) and the reset
+ * *LED* (GPIO2 pulses when credentials were wiped) - is configuration, not
  * code: see sdkconfig.defaults and partitions.csv.
  *
  * On first boot the device advertises as "blifi-XXXX" and logs its
@@ -31,8 +31,8 @@ static void on_blifi_event(void *arg, esp_event_base_t base, int32_t id, void *d
     case BLIFI_EVENT_HARD_RESET_TRIGGERED:
         /* Boot follows a reset-pin hard reset: the bootloader already erased
          * the Wi-Fi credentials (blifi_nvs partition) and the indicator LED is
-         * pulsing. Nothing to do here — see on_data_reset() for app data. */
-        ESP_LOGW(TAG, "hard reset detected — back to provisioning mode");
+         * pulsing. Nothing to do here - see on_data_reset() for app data. */
+        ESP_LOGW(TAG, "hard reset detected - back to provisioning mode");
         break;
     default:
         ESP_LOGI(TAG, "%s", blifi_status_str(e->status));
@@ -57,7 +57,7 @@ void app_main(void)
     }
 
     /* Defaults pick up the reset-indicator settings from Kconfig (LED on GPIO2,
-     * 2 s pulse — see sdkconfig.defaults). Override at runtime here if needed:
+     * 2 s pulse - see sdkconfig.defaults). Override at runtime here if needed:
      *   cfg.reset_indicator.gpio = 4;  cfg.reset_indicator.pulse_ms = 0;      */
     blifi_config_t cfg = BLIFI_DEFAULT_CONFIG();
 

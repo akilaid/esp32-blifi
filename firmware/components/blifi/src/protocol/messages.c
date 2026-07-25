@@ -1,7 +1,7 @@
 /**
  * @file messages.c
  * @brief JSON payload codecs (docs/protocol-spec.md §6). Self-contained minimal
- *        JSON — the wire format is JSON; no external parser dependency.
+ *        JSON - the wire format is JSON; no external parser dependency.
  */
 #include "messages.h"
 #include "frame.h" /* BLIFI_PROTO_VERSION */

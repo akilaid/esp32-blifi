@@ -11,7 +11,7 @@ Uint8List hx(String s) => Uint8List.fromList(
     [for (var i = 0; i < s.length; i += 2) int.parse(s.substring(i, i + 2), radix: 16)]);
 String hex(List<int> b) => b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
 
-// Vectors from the independent (OpenSSL) Python oracle — see scratchpad/blifi_oracle.py.
+// Vectors from the independent (OpenSSL) Python oracle - see scratchpad/blifi_oracle.py.
 final appSeed = hx('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
 final devPub = hx('358072d6365880d1aeea329adf9121383851ed21a28e3b75e965d0d2cd166254');
 const pop = 'TESTPOP1';

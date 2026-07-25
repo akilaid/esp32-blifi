@@ -1,4 +1,4 @@
-/// The public blifi provisioning API — a thin, typed wrapper over the internal
+/// The public blifi provisioning API - a thin, typed wrapper over the internal
 /// BLE/crypto/protocol layers.
 library;
 
@@ -58,7 +58,7 @@ class BlifiProvisioning {
           }
         });
         // isScanning emits its current value (false) on listen, before the
-        // scan starts — only close once scanning has actually gone true→false.
+        // scan starts - only close once scanning has actually gone true→false.
         var scanStarted = false;
         scanningSub = FlutterBluePlus.isScanning.listen((scanning) {
           if (scanning) {

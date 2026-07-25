@@ -3,7 +3,7 @@
  * @brief Wi-Fi station manager: scan, connect, NVS credential persistence, and
  *        a retry/backoff connection state machine.
  *
- * This is the Phase 2 surface of the blifi component — usable stand-alone (no
+ * This is the Phase 2 surface of the blifi component - usable stand-alone (no
  * BLE). Status changes are reported as ::BLIFI_EVENT posts on the default event
  * loop (see blifi.h). Later phases layer the provisioning manager on top and
  * drive this module from received credentials.

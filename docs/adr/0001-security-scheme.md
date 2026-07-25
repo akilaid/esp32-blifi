@@ -1,4 +1,4 @@
-# ADR 0001 — Credential-transfer security scheme
+# ADR 0001 - Credential-transfer security scheme
 
 - **Status:** Accepted (2026-07-23)
 - **Related:** [`../security.md`](../security.md), [`../protocol-spec.md`](../protocol-spec.md)
@@ -35,7 +35,7 @@ Product posture (this project's defaults):
 - The firmware carries a hard obligation to **rate-limit** confirmation attempts,
   since ~40-bit PoP + no built-in AEAD throttle would otherwise allow online
   guessing.
-- Interop is fragile to spec drift — the exact byte layout, HKDF labels, and
+- Interop is fragile to spec drift - the exact byte layout, HKDF labels, and
   nonce discipline are pinned in `security.md`/`protocol-spec.md` and any change
   bumps the protocol version.
 

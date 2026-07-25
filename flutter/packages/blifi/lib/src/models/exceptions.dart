@@ -30,7 +30,7 @@ class BleConnectionException extends BlifiException {
   const BleConnectionException([super.message = 'BLE connection failed']);
 }
 
-/// The secure handshake failed — a wrong Proof-of-Possession or a device
+/// The secure handshake failed - a wrong Proof-of-Possession or a device
 /// confirmation mismatch (protocol-spec `AUTH_FAILED`).
 class AuthenticationException extends BlifiException {
   /// Creates an [AuthenticationException].

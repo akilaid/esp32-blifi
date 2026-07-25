@@ -1,7 +1,7 @@
 # blifi minimal example
 
 The smallest useful blifi integration: BLE Wi-Fi provisioning plus the two
-hardware niceties — a **reset pin** and a **reset LED** — with no console/CLI.
+hardware niceties - a **reset pin** and a **reset LED** - with no console/CLI.
 `app_main()` is ~20 lines; the reset pin and LED are pure configuration
 (`sdkconfig.defaults` + `partitions.csv`), not code.
 
@@ -14,7 +14,7 @@ For an interactive demo with serial-console commands (`status`, `pop`, `reset`,
 | GPIO | Role | Notes |
 |------|------|-------|
 | 13 | Reset pin | Momentary button to GND; hold ~3 s during boot/reset |
-| 2 | Reset LED | Onboard LED on many ESP32 devkits — no wiring needed there |
+| 2 | Reset LED | Onboard LED on many ESP32 devkits - no wiring needed there |
 
 Both pins are configurable in `sdkconfig.defaults` (`menuconfig` →
 Bootloader config for the pin, `Blifi Provisioning → Hard Reset Indicator`
@@ -38,6 +38,6 @@ on every boot.
 
 Hold the reset pin (GPIO13) low while the device boots (press the button, tap
 EN/RST, keep holding ~3 s). The bootloader erases the dedicated `blifi_nvs`
-partition — Wi-Fi credentials only; the PoP survives, so a printed QR/sticker
-keeps working — and on that boot the LED (GPIO2) pulses for 2 s and the app's
+partition - Wi-Fi credentials only; the PoP survives, so a printed QR/sticker
+keeps working - and on that boot the LED (GPIO2) pulses for 2 s and the app's
 data-reset callback fires. The device is back in provisioning mode.

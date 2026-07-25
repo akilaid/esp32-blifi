@@ -2,7 +2,7 @@
  * @file main.c
  * @brief blifi provisioning demo (Phase 3): BLE provisioning + Wi-Fi.
  *
- * On boot: initialise blifi, log the Proof-of-Possession, and start — connecting
+ * On boot: initialise blifi, log the Proof-of-Possession, and start - connecting
  * to Wi-Fi if provisioned, otherwise advertising over BLE. REPL commands:
  *   status | pop | reset | selftest
  */
@@ -23,7 +23,7 @@ static void on_blifi_event(void *arg, esp_event_base_t base, int32_t id, void *d
 {
     const blifi_event_data_t *e = data;
     if (id == BLIFI_EVENT_HARD_RESET_TRIGGERED) {
-        ESP_LOGW(TAG, "[event] HARD_RESET_TRIGGERED — Wi-Fi credentials cleared by reset pin");
+        ESP_LOGW(TAG, "[event] HARD_RESET_TRIGGERED - Wi-Fi credentials cleared by reset pin");
     } else if (id == BLIFI_EVENT_WIFI_CONNECTED) {
         ESP_LOGI(TAG, "[event] %s  ip=" IPSTR, blifi_status_str(e->status), IP2STR(&e->ip));
     } else {
@@ -59,7 +59,7 @@ static int cmd_pop(int argc, char **argv)
 static int cmd_reset(int argc, char **argv)
 {
     esp_err_t err = blifi_reset_credentials();
-    printf(err == ESP_OK ? "reset — back to provisioning\n" : "reset failed: %s\n",
+    printf(err == ESP_OK ? "reset - back to provisioning\n" : "reset failed: %s\n",
            esp_err_to_name(err));
     return err == ESP_OK ? 0 : 1;
 }
@@ -114,6 +114,6 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_console_register_help_command());
     register_commands();
 
-    printf("\nblifi provisioning demo — type 'help'.\n");
+    printf("\nblifi provisioning demo - type 'help'.\n");
     ESP_ERROR_CHECK(esp_console_start_repl(repl));
 }

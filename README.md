@@ -1,6 +1,6 @@
 # esp32-blifi
 
-BLE-based Wi-Fi provisioning for ESP32 — replaces the hotspot/captive-portal flow
+BLE-based Wi-Fi provisioning for ESP32: replaces the hotspot/captive-portal flow
 with a companion app that connects over Bluetooth Low Energy, negotiates an
 encrypted session (X25519 + AES-256-GCM, gated by a Proof-of-Possession), sends
 Wi-Fi credentials, and gets the device online.
@@ -14,7 +14,7 @@ mirrors its wire protocol byte-for-byte.
 | Path | Artifact | Build |
 |------|----------|-------|
 | [`firmware/components/blifi/`](firmware/components/blifi) | Core ESP-IDF component (NimBLE, PSA crypto, Wi-Fi, provisioning state machine, reset-pin hard reset) | `idf.py build` (example) |
-| [`arduino/Blifi/`](arduino/Blifi) | Arduino-style wrapper over the component | PlatformIO (`pio run`) — see its README |
+| [`arduino/Blifi/`](arduino/Blifi) | Arduino-style wrapper over the component | PlatformIO (`pio run`) - see its README |
 | [`flutter/packages/blifi/`](flutter/packages/blifi) | Publishable Flutter/Dart package (`blifi`) | `flutter test` |
 | [`flutter/apps/demo_app/`](flutter/apps/demo_app) | Polished demo / boilerplate app (Material 3 Expressive, QR provisioning) | `flutter run` |
 
@@ -33,10 +33,9 @@ app, then picking a Wi-Fi network. Details in each artifact's `README.md`.
 
 ## Documentation
 
-- [`docs/plan.md`](docs/plan.md) — architecture, protocol design, and phased build order
-- [`docs/protocol-spec.md`](docs/protocol-spec.md) — GATT UUIDs, framing, message schema
-- [`docs/security.md`](docs/security.md) — threat model, crypto design, PoP handling
-- [`docs/adr/`](docs/adr) — architecture decision records
+- [`docs/protocol-spec.md`](docs/protocol-spec.md) - GATT UUIDs, framing, message schema
+- [`docs/security.md`](docs/security.md) - threat model, crypto design, PoP handling
+- [`docs/adr/`](docs/adr) - architecture decision records
 
 ## Distribution
 

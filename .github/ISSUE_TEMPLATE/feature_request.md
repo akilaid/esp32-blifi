@@ -13,7 +13,7 @@ What are you trying to do that's hard or impossible today?
 
 **Proposed solution**
 What you'd like to see. Note if it touches the wire protocol (that spans firmware +
-the Flutter package and needs a coordinated change — see `docs/protocol-spec.md`).
+the Flutter package and needs a coordinated change - see `docs/protocol-spec.md`).
 
 **Alternatives considered**
 Anything you've already tried or ruled out.
