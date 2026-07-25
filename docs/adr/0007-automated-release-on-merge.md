@@ -37,7 +37,12 @@ so an unbumped merge is a harmless no-op.
 
 - **ESP component** - `component-publish.yml` runs the upload action on push to `main`
   (real upload; skips if the version already exists) and on pull requests as
-  `dry_run` (validates the manifest and server-side example processing before merge).
+  `dry_run` (validates the manifest before merge). blifi's heavy dependency graph
+  makes the registry's server-side example processing slow enough that the upload
+  action can time out and report failure even though the version publishes moments
+  later; so on a push the upload is best-effort (`continue-on-error`) and a follow-up
+  step polls the registry API - the job is green only once the version is actually
+  live, red only if it never appears.
 - **Arduino library** - unchanged `arduino-mirror.yml` syncs the mirror on push to
   `main`; `arduino-release.yml` now runs automatically via `workflow_run` after a
   successful mirror sync and self-guards (tags the mirror only when
