@@ -1,6 +1,6 @@
 # blifi Protocol Specification
 
-**Status:** v1 — reference document. The `blifi` ESP-IDF component and the
+**Status:** v1 - reference document. The `blifi` ESP-IDF component and the
 `blifi` Flutter package MUST both implement this exactly; it is the contract
 that lets them interoperate byte-for-byte.
 
@@ -15,7 +15,7 @@ Protocol version (`version` byte in every frame): **`0x01`**.
 
 ```
 JSON payload  (application message, e.g. Wi-Fi credentials)
-   │  encrypt (AES-256-GCM) — encrypted channels only
+   │  encrypt (AES-256-GCM) - encrypted channels only
 Encrypted record  = counter(4) ‖ ciphertext ‖ tag(16)
    │  chunk to fit MTU
 Frames  = [header(8) ‖ chunk] written to / notified on a GATT characteristic
@@ -28,11 +28,11 @@ All multi-byte integers in headers and records are **big-endian (network order)*
 ## 2. GATT service
 
 One custom 128-bit service. Characteristic UUIDs share the service's base, with
-byte 12–13 (`0x000N`) selecting the characteristic.
+byte 12-13 (`0x000N`) selecting the characteristic.
 
 | Role | UUID | Properties | Enc? |
 |------|------|-----------|------|
-| **Service** | `6b1a0001-5f3e-4b7a-9c2d-1e8f7a4c9b20` | — | — |
+| **Service** | `6b1a0001-5f3e-4b7a-9c2d-1e8f7a4c9b20` | - | - |
 | Device-Info | `6b1a0002-5f3e-4b7a-9c2d-1e8f7a4c9b20` | Read | plaintext |
 | Handshake | `6b1a0003-5f3e-4b7a-9c2d-1e8f7a4c9b20` | Write, Notify | plaintext¹ |
 | Wi-Fi-Scan | `6b1a0004-5f3e-4b7a-9c2d-1e8f7a4c9b20` | Write, Notify | encrypted |
@@ -40,7 +40,7 @@ byte 12–13 (`0x000N`) selecting the characteristic.
 | Status | `6b1a0006-5f3e-4b7a-9c2d-1e8f7a4c9b20` | Notify | encrypted |
 
 ¹ Handshake carries only public keys, HMAC confirmation tags, and a failure code
-— none are secret, so the characteristic is plaintext. See `security.md`.
+- none are secret, so the characteristic is plaintext. See `security.md`.
 
 The app subscribes (CCCD) to Handshake, Wi-Fi-Scan, and Status notifications
 before starting the handshake.
@@ -60,13 +60,13 @@ Every write and every notification is one **frame**:
              8-byte header
 ```
 
-- `version` — `0x01`.
-- `msg_type` — see §4.
-- `seq` — chunk index within this message, from `0`.
-- `total_len` — total length of the **reassembled payload** (the encrypted
+- `version` - `0x01`.
+- `msg_type` - see §4.
+- `seq` - chunk index within this message, from `0`.
+- `total_len` - total length of the **reassembled payload** (the encrypted
   record for encrypted types, or the raw message bytes for plaintext types).
   Max `65535`.
-- `chunk_len` — bytes of payload in this frame.
+- `chunk_len` - bytes of payload in this frame.
 
 **Reassembly:** the receiver concatenates chunk bytes in `seq` order until the
 accumulated length equals `total_len`, then processes the payload. One message
@@ -98,7 +98,7 @@ chunking still works at the smaller size. A single-frame message uses
 
 ## 5. Encrypted record
 
-Encrypted messages (`0x10`–`0x30`) carry an AES-256-GCM record as the framing
+Encrypted messages (`0x10`-`0x30`) carry an AES-256-GCM record as the framing
 payload:
 
 ```
@@ -106,13 +106,13 @@ record = counter(4, BE) ‖ ciphertext(N) ‖ tag(16)
 ```
 
 - Key: the per-direction session key (`K_app2dev` or `K_dev2app`) from the
-  handshake — see `security.md`.
+  handshake - see `security.md`.
 - Nonce (96-bit) = `00 00 00 00 00 00 00 00 ‖ counter(4, BE)`.
-- `counter` — per-direction, starts at `0`, +1 per message sent on that key.
+- `counter` - per-direction, starts at `0`, +1 per message sent on that key.
   Carried in the record so the receiver builds the nonce and enforces replay
   protection (**reject any counter ≤ the last accepted** on that key).
 - AAD = `version(1) ‖ msg_type(1)`.
-- `tag` — 16-byte GCM authentication tag. A failed tag check ⇒ drop + treat as
+- `tag` - 16-byte GCM authentication tag. A failed tag check ⇒ drop + treat as
   `INVALID_MESSAGE`.
 - Plaintext = the UTF-8 JSON of §6.
 
@@ -160,7 +160,7 @@ record = counter(4, BE) ‖ ciphertext(N) ‖ tag(16)
 ## 7. Status / error codes
 
 Single `u8` space, mirrored exactly in firmware C (`blifi_status_t`) and Dart
-(`ProvisioningStatus`). `0x00`–`0x1F` = states, `0x20`+ = errors.
+(`ProvisioningStatus`). `0x00`-`0x1F` = states, `0x20`+ = errors.
 
 | Code | Name | Meaning |
 |------|------|---------|

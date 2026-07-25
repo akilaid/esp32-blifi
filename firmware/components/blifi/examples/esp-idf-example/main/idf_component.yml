@@ -1,3 +1,4 @@
+description: "Interactive serial-console demo of blifi's Wi-Fi manager: scan, connect, persist credentials to NVS, and watch the retry/backoff state machine (no BLE)."
 dependencies:
   akilaid/blifi:
     version: "*"

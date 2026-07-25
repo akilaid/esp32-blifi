@@ -1,13 +1,13 @@
-# ADR 0004 — Monorepo layout & tooling
+# ADR 0004 - Monorepo layout & tooling
 
 - **Status:** Accepted (2026-07-23)
 - **Related:** [`../../README.md`](../../README.md)
 
 ## Context
 
-The project ships four independently-versioned artifacts — the `blifi` ESP-IDF
+The project ships four independently-versioned artifacts - the `blifi` ESP-IDF
 component, the `Blifi` Arduino library, the `blifi` Flutter package, and the
-demo app — that must evolve together (a protocol change touches firmware and the
+demo app - that must evolve together (a protocol change touches firmware and the
 Flutter package at once). They use very different toolchains (ESP-IDF/CMake,
 Arduino, Dart/Flutter).
 
@@ -25,7 +25,7 @@ lives under its own top-level tree (`firmware/`, `arduino/`, `flutter/`).
 - No extra tooling layer to learn or maintain, and nothing that assumes a single
   language toolchain across such different stacks.
 - Coordination is by convention (independent CHANGELOGs, per-artifact CI
-  workflows) rather than enforced by a tool — acceptable at this scale.
+  workflows) rather than enforced by a tool - acceptable at this scale.
 
 ## Alternatives considered
 

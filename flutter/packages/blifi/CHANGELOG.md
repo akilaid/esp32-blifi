@@ -1,8 +1,13 @@
-# Changelog — blifi (Flutter package)
+# Changelog - blifi (Flutter package)
 
 All notable changes to the Flutter package are documented here. Format based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this package is
 versioned independently under [Semantic Versioning](https://semver.org/).
+
+## 0.1.2 - 2026-07-25
+
+Docs only: removed em-dashes from the README, the pubspec description, and code
+comments. No functional or API changes.
 
 ## 0.1.1 - 2026-07-25
 
@@ -23,7 +28,7 @@ Initial release.
 - Package core (`lib/src`), the Dart mirror of the firmware:
   - `protocol`: framing (8-byte big-endian header, chunking, reassembly), the
     JSON payload codecs, and shared constants/status codes.
-  - `crypto`: `BlifiSession` — X25519 + HKDF-SHA256 + AES-256-GCM + HMAC-SHA256
+  - `crypto`: `BlifiSession` - X25519 + HKDF-SHA256 + AES-256-GCM + HMAC-SHA256
     (app role) via `package:cryptography`, matching `docs/security.md`.
   - `ble`: `flutter_blue_plus` transport (scan/connect/MTU/chunked notify +
     reassembly) and `ProvisioningSession` (handshake, Wi-Fi scan, credential

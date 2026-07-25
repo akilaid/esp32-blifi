@@ -11,7 +11,7 @@
 
 /* The bootloader factory-reset RTC flag is only available when the bootloader
  * factory-reset feature is configured (it auto-selects BOOTLOADER_RESERVE_RTC_MEM).
- * Builds without it — e.g. the Arduino/PlatformIO basic setup — skip detection. */
+ * Builds without it - e.g. the Arduino/PlatformIO basic setup - skip detection. */
 #if defined(CONFIG_BOOTLOADER_RESERVE_RTC_MEM)
 #include "bootloader_common.h"
 #define BLIFI_HARD_RESET_SUPPORTED 1
@@ -96,7 +96,7 @@ void blifi_hard_reset_indicator_clear(void)
     gpio_set_level((gpio_num_t)s_ind.gpio, !s_ind.active_level);
 }
 
-#else  /* indicator compiled out — no-ops */
+#else  /* indicator compiled out - no-ops */
 
 static inline void indicator_assert(void) {}
 void blifi_hard_reset_set_indicator(const blifi_reset_indicator_config_t *cfg) { (void)cfg; }
@@ -138,7 +138,7 @@ void blifi_hard_reset_dispatch(void)
     if (!s_was_hard_reset) {
         return;
     }
-    indicator_assert(); /* §6.2 indicator pin — no-op when compiled out */
+    indicator_assert(); /* §6.2 indicator pin - no-op when compiled out */
     if (s_cb) {
         ESP_LOGI(TAG, "invoking app data-reset callback");
         s_cb(s_cb_arg);

@@ -1,6 +1,6 @@
-version: "0.1.1"
+version: "0.1.2"
 description: >-
-  blifi — BLE-based Wi-Fi provisioning for ESP32. Provision Wi-Fi credentials
+  blifi: BLE-based Wi-Fi provisioning for ESP32. Provision Wi-Fi credentials
   over an encrypted BLE session (X25519 + AES-256-GCM, gated by a
   Proof-of-Possession) instead of a hotspot/captive portal. Includes a NimBLE
   GATT transport, Wi-Fi station manager with NVS persistence and retry/backoff,

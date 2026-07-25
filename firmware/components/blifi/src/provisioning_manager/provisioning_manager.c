@@ -84,7 +84,7 @@ static void pop_load_or_create(void)
 {
     if (!s.cfg.require_pop) {
         s.pop[0] = '\0';
-        ESP_LOGW(TAG, "PoP DISABLED (dev mode) — not for production");
+        ESP_LOGW(TAG, "PoP DISABLED (dev mode) - not for production");
         return;
     }
     nvs_handle_t h;
@@ -184,7 +184,7 @@ static void handle_handshake(uint8_t msg_type, const uint8_t *payload, size_t le
         blifi_ble_send(BLIFI_CH_HANDSHAKE, BLIFI_MSG_HS_CONFIRM, confirm_dev, BLIFI_CONFIRM_LEN);
         s.established = true;
         s.fail_count = 0;
-        ESP_LOGI(TAG, "handshake confirmed — session established");
+        ESP_LOGI(TAG, "handshake confirmed - session established");
     }
 }
 
@@ -325,7 +325,7 @@ static void start_ble(void)
  * Bring up the dedicated `blifi_nvs` credentials partition and return its name.
  * If the partition is absent (integrator hasn't merged partitions.example.csv),
  * warn loudly and fall back to the default `nvs` partition so provisioning still
- * works — only the reset-pin factory reset is then unscoped. Never fails silently.
+ * works - only the reset-pin factory reset is then unscoped. Never fails silently.
  */
 static const char *resolve_creds_partition(void)
 {
@@ -344,14 +344,14 @@ static const char *resolve_creds_partition(void)
     }
     if (err == ESP_ERR_NOT_FOUND) {
         ESP_LOGW(TAG, "=====================================================================");
-        ESP_LOGW(TAG, " '%s' partition not found — reset-pin factory reset is NOT scoped.",
+        ESP_LOGW(TAG, " '%s' partition not found - reset-pin factory reset is NOT scoped.",
                  BLIFI_CREDS_PARTITION);
         ESP_LOGW(TAG, " Merge partitions.example.csv into your partitions.csv to enable it.");
         ESP_LOGW(TAG, " Falling back to the default 'nvs' partition for credentials.");
         ESP_LOGW(TAG, "=====================================================================");
         return NULL; /* default "nvs" */
     }
-    ESP_LOGE(TAG, "nvs_flash_init_partition('%s'): %s — using default 'nvs'",
+    ESP_LOGE(TAG, "nvs_flash_init_partition('%s'): %s - using default 'nvs'",
              BLIFI_CREDS_PARTITION, esp_err_to_name(err));
     return NULL;
 }
@@ -394,7 +394,7 @@ esp_err_t blifi_start(void)
     static bool hard_reset_notified;
     if (!hard_reset_notified && blifi_was_hard_reset()) {
         hard_reset_notified = true;
-        ESP_LOGW(TAG, "hard reset — Wi-Fi credentials cleared; PoP preserved");
+        ESP_LOGW(TAG, "hard reset - Wi-Fi credentials cleared; PoP preserved");
         blifi_event_data_t ev = { .status = BLIFI_STATUS_IDLE };
         esp_event_post(BLIFI_EVENT, BLIFI_EVENT_HARD_RESET_TRIGGERED, &ev, sizeof(ev), 0);
         blifi_hard_reset_dispatch();
@@ -406,13 +406,13 @@ esp_err_t blifi_start(void)
             s.state = ST_CONNECTING;
         }
         UNLOCK();
-        ESP_LOGI(TAG, "provisioned — connecting to Wi-Fi");
+        ESP_LOGI(TAG, "provisioned - connecting to Wi-Fi");
         return blifi_wifi_manager_start();
     }
     LOCK();
     s.state = ST_PROV;
     UNLOCK();
-    ESP_LOGI(TAG, "unprovisioned — advertising for provisioning");
+    ESP_LOGI(TAG, "unprovisioned - advertising for provisioning");
     start_ble();
     return ESP_OK;
 }
@@ -439,7 +439,7 @@ esp_err_t blifi_reset_credentials(void)
     s.state = ST_UNPROV;
     UNLOCK();
     start_ble();
-    ESP_LOGI(TAG, "credentials reset — back to provisioning");
+    ESP_LOGI(TAG, "credentials reset - back to provisioning");
     return err;
 }
 

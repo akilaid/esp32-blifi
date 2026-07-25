@@ -155,7 +155,7 @@ class ProvisioningController extends ChangeNotifier {
       networks = nets..sort((a, b) => b.rssi.compareTo(a.rssi));
       _set(ProvisioningStage.wifiList);
     } on AuthenticationException {
-      errorMessage = 'Wrong Proof-of-Possession — double-check and try again.';
+      errorMessage = 'Wrong Proof-of-Possession - double-check and try again.';
       _set(ProvisioningStage.failure);
     } catch (e) {
       errorMessage = _messageFor(e);

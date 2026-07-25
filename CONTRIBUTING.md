@@ -10,12 +10,12 @@ independently-versioned artifacts that evolve together:
 | Flutter package (`blifi`) | `flutter/packages/blifi/` | Flutter ≥ 3.16 |
 | Demo app | `flutter/apps/demo_app/` | Flutter |
 
-The **ESP-IDF component is the single source of truth** — the Arduino library is a
+The **ESP-IDF component is the single source of truth** - the Arduino library is a
 thin wrapper over it, and the Flutter package mirrors its protocol byte-for-byte.
 `arduino/Blifi/` is mirrored to
 [`esp32-blifi-arduino`](https://github.com/akilaid/esp32-blifi-arduino)
 automatically for the Arduino Library Manager (see
-[ADR 0006](docs/adr/0006-arduino-distribution-mirror.md)) — never edit that repo
+[ADR 0006](docs/adr/0006-arduino-distribution-mirror.md)) - never edit that repo
 directly.
 
 ## Before you start
@@ -63,7 +63,7 @@ CI (GitHub Actions) runs the equivalent checks on every PR.
 ## Reporting issues
 
 Use the issue templates. For security-sensitive reports, please avoid filing a
-public issue with exploit details — see [`docs/security.md`](docs/security.md).
+public issue with exploit details - see [`docs/security.md`](docs/security.md).
 
 By contributing, you agree your contributions are licensed under the
 repository's [MIT License](LICENSE).

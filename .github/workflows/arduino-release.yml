@@ -1,6 +1,6 @@
 # Cut an Arduino Library Manager release: tag + GitHub Release on the mirror repo
 # when arduino/Blifi/library.properties has a newer version than the mirror's
-# latest tag. Deliberately MANUAL (workflow_dispatch) — a human decides when a
+# latest tag. Deliberately MANUAL (workflow_dispatch) - a human decides when a
 # version is ready for every Arduino IDE user. See ADR 0006.
 #
 # Requires the same `ARDUINO_MIRROR_PAT` (contents: write on the mirror repo).
@@ -24,7 +24,7 @@ jobs:
         working-directory: _mirror
         run: |
           if [ ! -f library.properties ]; then
-            echo "::error::mirror has no library.properties yet — run arduino-mirror first"; exit 1
+            echo "::error::mirror has no library.properties yet - run arduino-mirror first"; exit 1
           fi
           version=$(grep -E '^version=' library.properties | head -1 | cut -d= -f2 | tr -d '[:space:]')
           if [ -z "$version" ]; then
@@ -58,7 +58,7 @@ jobs:
           gh release create "v$V" \
             --repo akilaid/esp32-blifi-arduino \
             --title "v$V" \
-            --notes "Blifi Arduino library v$V — mirrored from akilaid/esp32-blifi. The Arduino Library Manager picks up this tagged release automatically."
+            --notes "Blifi Arduino library v$V - mirrored from akilaid/esp32-blifi. The Arduino Library Manager picks up this tagged release automatically."
 
       - name: Nothing to release
         if: steps.check.outputs.newer != 'true'

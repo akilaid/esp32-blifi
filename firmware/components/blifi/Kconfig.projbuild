@@ -7,12 +7,12 @@ menu "Blifi Provisioning"
             default n
             help
                 Optional (docs/plan.md §6.2). When enabled, blifi drives a GPIO
-                active on the boot following a reset-pin hard reset (§6.1) — wire
+                active on the boot following a reset-pin hard reset (§6.1) - wire
                 an LED, relay, or optocoupler to it as a "credentials were wiped"
                 signal, with no application code required.
 
-                When disabled (default) the entire feature — GPIO config, timer,
-                drive logic — compiles out and behavior is unchanged.
+                When disabled (default) the entire feature - GPIO config, timer,
+                drive logic - compiles out and behavior is unchanged.
 
         config BLIFI_RESET_INDICATOR_GPIO
             int "Indicator GPIO number"
@@ -45,7 +45,7 @@ menu "Blifi Provisioning"
                 How long the pin stays asserted. A fixed duration (default 2000 ms)
                 suits an LED blink or optocoupler pulse. Set 0 to hold the pin
                 asserted until the device is re-provisioned and back online
-                (the state machine reaches CONNECTED) — e.g. for a relay.
+                (the state machine reaches CONNECTED) - e.g. for a relay.
 
     endmenu
 

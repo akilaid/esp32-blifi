@@ -1,3 +1,4 @@
+description: "Smallest useful blifi integration: encrypted BLE Wi-Fi provisioning with a hardware reset pin and reset LED, no console/CLI."
 dependencies:
   akilaid/blifi:
     version: "*"

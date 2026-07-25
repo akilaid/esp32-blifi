@@ -172,7 +172,7 @@ static void handle_disconnected(uint8_t reason)
     blifi_status_t st = s.timed_out ? BLIFI_STATUS_WIFI_TIMEOUT : reason_to_status(reason);
 
     if (s.got_ip) {
-        /* Was connected — a drop. Reset the retry budget and reconnect. */
+        /* Was connected - a drop. Reset the retry budget and reconnect. */
         ESP_LOGW(TAG, "connection dropped (reason %u), reconnecting", reason);
         s.got_ip = false;
         s.retries = 0;

@@ -137,7 +137,7 @@ class _QrScanScreenState extends State<QrScanScreen> with WidgetsBindingObserver
   }
 }
 
-/// Friendly fallback when the camera can't be opened — shows the real error code
+/// Friendly fallback when the camera can't be opened - shows the real error code
 /// (so failures are diagnosable) plus retry and manual-entry escapes.
 class _CameraError extends StatelessWidget {
   const _CameraError({

@@ -31,7 +31,7 @@ CONFIG_BOOTLOADER_HOLD_TIME_GPIO=3
 CONFIG_BOOTLOADER_DATA_FACTORY_RESET="blifi_nvs"
 
 # Reset LED: pulse GPIO2 (onboard LED on many devkits) for 2 s on the boot after
-# a reset-pin hard reset — "credentials were wiped" feedback with no app code.
+# a reset-pin hard reset - "credentials were wiped" feedback with no app code.
 CONFIG_BLIFI_RESET_INDICATOR_ENABLE=y
 CONFIG_BLIFI_RESET_INDICATOR_GPIO=2
 CONFIG_BLIFI_RESET_INDICATOR_ACTIVE_HIGH=y

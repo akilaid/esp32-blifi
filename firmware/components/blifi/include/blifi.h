@@ -129,7 +129,7 @@ const char *blifi_get_pop(void);
 /**
  * @brief Callback invoked once on the boot following a hard (reset-pin) reset,
  *        so the application can erase its own data (its NVS namespace(s),
- *        SPIFFS/LittleFS files, etc.). Wi-Fi credentials are already gone — the
+ *        SPIFFS/LittleFS files, etc.). Wi-Fi credentials are already gone - the
  *        bootloader erased the dedicated `blifi_nvs` partition before app_main.
  * @param arg The opaque pointer passed to ::blifi_register_data_reset_callback.
  */
@@ -138,8 +138,8 @@ typedef void (*blifi_data_reset_cb_t)(void *arg);
 /**
  * @brief Register an optional app-data reset callback for the hard-reset flow
  *        (§6.1). Call this **before** ::blifi_start (typically right before
- *        ::blifi_init); ::blifi_start fires it — and posts
- *        ::BLIFI_EVENT_HARD_RESET_TRIGGERED — when this boot follows a hard reset.
+ *        ::blifi_init); ::blifi_start fires it - and posts
+ *        ::BLIFI_EVENT_HARD_RESET_TRIGGERED - when this boot follows a hard reset.
  *        Passing NULL clears any registration.
  */
 esp_err_t blifi_register_data_reset_callback(blifi_data_reset_cb_t cb, void *arg);

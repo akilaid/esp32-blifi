@@ -1,6 +1,6 @@
 # blifi
 
-BLE-based Wi-Fi provisioning for ESP32 — hand Wi-Fi credentials to a device over
+BLE-based Wi-Fi provisioning for ESP32 - hand Wi-Fi credentials to a device over
 an **encrypted Bluetooth Low Energy** session instead of a hotspot/captive
 portal. This Dart package is the phone side; it interoperates byte-for-byte with
 the [`blifi` ESP-IDF firmware component](https://github.com/akilaid/esp32-blifi).
@@ -9,7 +9,7 @@ the [`blifi` ESP-IDF firmware component](https://github.com/akilaid/esp32-blifi)
   so credentials are never exposed and an active MITM can't succeed.
 - 📶 **Full flow**: scan for devices, connect, list the device's Wi-Fi networks,
   send credentials, and stream live connection status.
-- 🧩 **Small, typed API** with typed exceptions — no string-matching errors.
+- 🧩 **Small, typed API** with typed exceptions - no string-matching errors.
 
 ## Install
 
@@ -24,7 +24,7 @@ This package uses [`flutter_blue_plus`](https://pub.dev/packages/flutter_blue_pl
 for BLE. Add the platform permissions and request them at runtime (e.g. with
 [`permission_handler`](https://pub.dev/packages/permission_handler)).
 
-**Android** — `android/app/src/main/AndroidManifest.xml`:
+**Android** - `android/app/src/main/AndroidManifest.xml`:
 
 ```xml
 <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
@@ -35,7 +35,7 @@ for BLE. Add the platform permissions and request them at runtime (e.g. with
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
 ```
 
-**iOS** — `ios/Runner/Info.plist`:
+**iOS** - `ios/Runner/Info.plist`:
 
 ```xml
 <key>NSBluetoothAlwaysUsageDescription</key>
@@ -73,7 +73,7 @@ await session.disconnect();
 
 Errors are typed: catch `AuthenticationException` (wrong PoP),
 `WifiConnectionException` (with a `ProvisioningState`), `BleConnectionException`,
-or `ProvisioningTimeoutException` — all subtypes of `BlifiException`.
+or `ProvisioningTimeoutException` - all subtypes of `BlifiException`.
 
 See [`example/`](https://github.com/akilaid/esp32-blifi/tree/main/flutter/packages/blifi/example)
 for a runnable app.

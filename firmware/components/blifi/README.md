@@ -5,8 +5,8 @@ provisioning: NimBLE GATT transport, X25519 + AES-256-GCM session security,
 binary framing over JSON payloads, Wi-Fi scan/connect/NVS persistence, and the
 provisioning state machine.
 
-Two runnable examples: [`examples/minimal`](examples/minimal) — the smallest
-integration (~20 lines, incl. reset pin + reset LED, no console) — and
+Two runnable examples: [`examples/minimal`](examples/minimal) - the smallest
+integration (~20 lines, incl. reset pin + reset LED, no console) - and
 [`examples/esp-idf-example`](examples/esp-idf-example), an interactive
 serial-console demo. Public API is in [`include/blifi.h`](include/blifi.h):
 `blifi_init` → `blifi_start`, plus `blifi_is_provisioned`, `blifi_reset_credentials`
@@ -16,13 +16,13 @@ are delivered on the `BLIFI_EVENT` esp_event base.
 ## Hard reset (reset-pin factory reset)
 
 Holding a GPIO to its configured level while the ESP32 powers on erases the stored
-Wi-Fi credentials — a hardware "forget this network" that needs no serial console
+Wi-Fi credentials - a hardware "forget this network" that needs no serial console
 or app. It uses ESP-IDF's **bootloader** factory reset, which runs before
 `app_main` (Wi-Fi/BLE never come up with stale credentials) with Espressif's own
 debounce. The erase is scoped to a **dedicated `blifi_nvs` partition** holding only
-the Wi-Fi credentials; the default `nvs` partition — the **PoP** and your app's own
-data — is left intact, so a printed QR/sticker keeps working after a reset. Design
-rationale: [`docs/adr/0005-hard-reset-mechanism.md`](../../../docs/adr/0005-hard-reset-mechanism.md).
+the Wi-Fi credentials; the default `nvs` partition - the **PoP** and your app's own
+data - is left intact, so a printed QR/sticker keeps working after a reset. Design
+rationale: [ADR 0005: hard-reset mechanism](https://github.com/akilaid/esp32-blifi/blob/main/docs/adr/0005-hard-reset-mechanism.md).
 
 This is **opt-in** and requires two copy-paste integration steps. Without them
 blifi still provisions (it logs a loud warning and falls back to the default `nvs`
@@ -44,7 +44,7 @@ blifi_nvs,   data, nvs,     0x210000, 0x4000   # <- add this; erased by factory 
 ### 2. Enable the bootloader factory reset
 
 Add to your app's `sdkconfig.defaults` (adjust the GPIO to your hardware). These
-are ESP-IDF *bootloader* options — they must live in the app, not the component:
+are ESP-IDF *bootloader* options - they must live in the app, not the component:
 
 ```
 CONFIG_BOOTLOADER_FACTORY_RESET=y
@@ -81,7 +81,7 @@ reverts to false on the next normal boot).
 
 ### 4. (Optional) Hard-reset indicator pin
 
-Drive a GPIO active when a hard reset is detected — wire an LED, relay, or
+Drive a GPIO active when a hard reset is detected - wire an LED, relay, or
 optocoupler as a physical "credentials were wiped" signal, no app code needed.
 Configure via **menuconfig → Blifi Provisioning → Hard Reset Indicator** (or
 `sdkconfig.defaults`):
