@@ -45,10 +45,13 @@ app, then picking a Wi-Fi network. Details in each artifact's `README.md`.
   [`esp32-blifi-arduino`](https://github.com/akilaid/esp32-blifi-arduino), for the
   Arduino Library Manager (see [ADR 0006](docs/adr/0006-arduino-distribution-mirror.md))
 
+Publishing is automated on merge to `main` (a version bump is the release trigger);
+see [RELEASING.md](RELEASING.md).
+
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Each artifact has its own `CHANGELOG.md` and
-semver.
+See [CONTRIBUTING.md](CONTRIBUTING.md) and, for the release flow,
+[RELEASING.md](RELEASING.md). Each artifact has its own `CHANGELOG.md` and semver.
 
 ## License
 
