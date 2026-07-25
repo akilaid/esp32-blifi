@@ -1,0 +1,55 @@
+# Bridge that makes the Flutter package publish automatically on merge to main.
+#
+# Why this exists: pub.dev refuses to publish from a branch push - it only
+# authorises a publish that was triggered by pushing a git tag matching the
+# configured pattern (blifi-v{{version}}). And a tag pushed by the default
+# GITHUB_TOKEN does NOT trigger another workflow. So on every push to main this
+# job reads flutter/packages/blifi/pubspec.yaml, and if `blifi-v<version>` isn't
+# already a tag, it creates and pushes it using a PAT - which then fires
+# flutter-package-publish.yml (the tag-triggered publisher).
+#
+# Idempotent: it runs on every push to main and does nothing unless the current
+# pubspec version has no matching tag yet - so it also self-heals a version that
+# was bumped earlier but never tagged/published. To release the package: bump
+# `version:` in pubspec.yaml + add its CHANGELOG entry, then merge to main.
+# Nothing manual.
+#
+# Requires a fine-grained PAT `RELEASE_PAT` with `contents: write` scoped to
+# akilaid/esp32-blifi. The default GITHUB_TOKEN cannot be used here because a
+# tag it pushes would not trigger flutter-package-publish. Create it manually.
+name: flutter-autotag
+
+on:
+  push:
+    branches: [main]
+
+concurrency: flutter-autotag
+
+jobs:
+  autotag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # Check out with the PAT so the tag push is authenticated as the PAT
+          # and therefore triggers flutter-package-publish.
+          token: ${{ secrets.RELEASE_PAT }}
+
+      - name: Tag blifi-v<version> if not already tagged
+        run: |
+          set -euo pipefail
+          version=$(grep -E '^version:' flutter/packages/blifi/pubspec.yaml | head -1 | awk '{print $2}' | tr -d '[:space:]')
+          if [ -z "$version" ]; then
+            echo "::error::no version: in pubspec.yaml"; exit 1
+          fi
+          tag="blifi-v${version}"
+          if git ls-remote --tags --exit-code origin "refs/tags/${tag}" >/dev/null 2>&1; then
+            echo "Tag ${tag} already exists - nothing to release."
+            exit 0
+          fi
+          echo "Creating and pushing ${tag} (fires flutter-package-publish)."
+          git config user.name "blifi-release[bot]"
+          git config user.email "blifi-release@users.noreply.github.com"
+          git tag "${tag}"
+          git push origin "${tag}"
