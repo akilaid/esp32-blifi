@@ -1,16 +1,29 @@
 # Publish the blifi ESP-IDF component to the ESP Component Registry
-# (https://components.espressif.com, id `akilaid/blifi`). Deliberately MANUAL
-# (workflow_dispatch) - a human decides when a version is ready, same policy as
-# arduino-release. The registry rejects re-uploads of an existing version, so
-# bump `version:` in firmware/components/blifi/idf_component.yml first.
+# (https://components.espressif.com, id `akilaid/blifi`), fully automatic.
+#
+#   - pull_request touching the component: runs the action with dry_run, so the
+#     registry validates the manifest AND server-side example processing without
+#     creating a version. Catches a broken example manifest BEFORE merge.
+#   - push to main: the real upload. The action reads `version:` from
+#     idf_component.yml and is idempotent - if that version already exists it
+#     SKIPS silently and the job still succeeds, so merges that don't bump the
+#     version are safe no-ops. To release, just bump `version:` and merge.
 #
 # Requires the `IDF_COMPONENT_API_TOKEN` repo secret: create it at
-# https://components.espressif.com → profile → Tokens, with the
-# `write:components` scope.
+# https://components.espressif.com -> profile -> Tokens, with the
+# `write:components` scope. (dry_run does not need a valid token.)
 name: component-publish
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'firmware/components/blifi/**'
+      - '.github/workflows/component-publish.yml'
+  pull_request:
+    paths:
+      - 'firmware/components/blifi/**'
+      - '.github/workflows/component-publish.yml'
 
 jobs:
   publish:
@@ -19,10 +32,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Upload to ESP Component Registry
-        uses: espressif/upload-components-ci-action@v1
+        uses: espressif/upload-components-ci-action@v2
         with:
           namespace: akilaid
-          name: blifi
-          # Version comes from idf_component.yml `version:` - not overridden here.
-          directories: firmware/components/blifi
+          # v2 syntax: `component_name:relative/path`. Version is read from the
+          # component's idf_component.yml `version:` field, not overridden here.
+          components: "blifi:firmware/components/blifi"
           api_token: ${{ secrets.IDF_COMPONENT_API_TOKEN }}
+          # Validate-only on PRs; real upload on push to main.
+          dry_run: ${{ github.event_name == 'pull_request' }}

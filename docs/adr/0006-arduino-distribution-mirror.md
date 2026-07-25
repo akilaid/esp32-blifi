@@ -37,12 +37,12 @@ nothing there is written by hand. Two **separate** GitHub Actions workflows:
    (`arduino/mirror-README-banner.md`) + the library's own README. Keeps the mirror
    current for install-from-Git users; ships nothing to Library Manager users by
    itself.
-2. **`arduino-release.yml`** - deliberate, high-stakes, so **manual**
-   (`workflow_dispatch`). Reads `version` from `library.properties`; if it's newer
-   than the mirror's latest `v*` tag, it tags that commit and creates a GitHub
-   Release. That tag is what makes a new version available to every Arduino IDE user,
-   so a human decides when to fire it (same reasoning as not auto-running
-   `flutter pub publish` on every merge).
+2. **`arduino-release.yml`** - reads `version` from `library.properties`; if it's
+   newer than the mirror's latest `v*` tag, it tags that commit and creates a GitHub
+   Release. That tag is what makes a new version available to every Arduino IDE user.
+   *(Originally a manual `workflow_dispatch`; now runs automatically after each mirror
+   sync per [ADR 0007](0007-automated-release-on-merge.md). It still self-guards on the
+   version, so it only releases when `library.properties` was actually bumped.)*
 
 **Auth:** the default `GITHUB_TOKEN` cannot push to a *different* repository, so both
 workflows use a **fine-grained PAT** (`ARDUINO_MIRROR_PAT`) with `contents: write`
