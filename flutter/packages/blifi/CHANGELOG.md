@@ -4,6 +4,13 @@ All notable changes to the Flutter package are documented here. Format based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this package is
 versioned independently under [Semantic Versioning](https://semver.org/).
 
+## 0.2.0 - 2026-07-25
+
+Version alignment: bumped to 0.2.0 alongside the ESP-IDF component and Arduino
+library so the monorepo's published artifacts share one version. No functional or
+API changes in the Dart package (the fixed-PoP feature this release adds is
+device-side; the app just sends whatever PoP the user enters, as before).
+
 ## 0.1.3 - 2026-07-25
 
 Docs only: removed em-dashes from the README, the pubspec description, and code
