@@ -80,12 +80,26 @@ static bool ct_equal(const uint8_t *a, const uint8_t *b, size_t n)
 
 /* ------------------------------------------------------------------- PoP */
 
-static void pop_load_or_create(void)
+static esp_err_t pop_load_or_create(void)
 {
     if (!s.cfg.require_pop) {
         s.pop[0] = '\0';
         ESP_LOGW(TAG, "PoP DISABLED (dev mode) - not for production");
-        return;
+        return ESP_OK;
+    }
+    /* A configured fixed PoP is authoritative: it overrides any NVS-stored value
+     * and is not persisted (the source of truth is the build/config, not flash). */
+    const char *fixed = s.cfg.fixed_pop;
+    if (fixed && fixed[0]) {
+        if (blifi_pop_validate(fixed) != ESP_OK) {
+            ESP_LOGE(TAG, "Configured fixed PoP is invalid "
+                          "(need 8 Crockford base32 chars): %s", fixed);
+            return ESP_ERR_INVALID_ARG;   /* runtime analog of the build-time stop */
+        }
+        memcpy(s.pop, fixed, BLIFI_POP_LEN);
+        s.pop[BLIFI_POP_LEN] = '\0';
+        ESP_LOGI(TAG, "Proof-of-Possession (fixed): %s", s.pop);
+        return ESP_OK;
     }
     nvs_handle_t h;
     size_t len = sizeof(s.pop);
@@ -94,12 +108,12 @@ static void pop_load_or_create(void)
         nvs_close(h);
         if (e == ESP_OK) {
             ESP_LOGI(TAG, "Proof-of-Possession (stored): %s", s.pop);
-            return;
+            return ESP_OK;
         }
     }
     if (blifi_pop_generate(s.pop, sizeof(s.pop)) != ESP_OK) {
         ESP_LOGE(TAG, "PoP generation failed");
-        return;
+        return ESP_FAIL;
     }
     if (nvs_open(NVS_NS, NVS_READWRITE, &h) == ESP_OK) {
         nvs_set_str(h, NVS_KEY_POP, s.pop);
@@ -109,6 +123,7 @@ static void pop_load_or_create(void)
     ESP_LOGW(TAG, "==================================");
     ESP_LOGW(TAG, " Proof-of-Possession: %s", s.pop);
     ESP_LOGW(TAG, "==================================");
+    return ESP_OK;
 }
 
 /* -------------------------------------------------------- encrypted send */
@@ -371,7 +386,7 @@ esp_err_t blifi_init(const blifi_config_t *config)
     ESP_RETURN_ON_ERROR(blifi_wifi_manager_init(&s.cfg.wifi), TAG, "wifi init");
     ESP_RETURN_ON_ERROR(esp_event_handler_instance_register(
         BLIFI_EVENT, ESP_EVENT_ANY_ID, wifi_event, NULL, NULL), TAG, "evt reg");
-    pop_load_or_create();
+    ESP_RETURN_ON_ERROR(pop_load_or_create(), TAG, "pop");
 
     /* Cache the bootloader's factory-reset flag now (the getter consumes it on
      * first read). The event + app callback fire in blifi_start(), by which point

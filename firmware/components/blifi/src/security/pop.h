@@ -21,6 +21,15 @@ extern "C" {
  */
 esp_err_t blifi_pop_generate(char *out, size_t cap);
 
+/**
+ * @brief Validate a fixed PoP string against the generated format.
+ *
+ * @return ESP_OK if `pop` is exactly ::BLIFI_POP_LEN characters, each an uppercase
+ *         Crockford base32 symbol (0-9, A-Z excluding I, L, O, U);
+ *         ESP_ERR_INVALID_ARG otherwise (including NULL).
+ */
+esp_err_t blifi_pop_validate(const char *pop);
+
 #ifdef __cplusplus
 }
 #endif

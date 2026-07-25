@@ -49,4 +49,19 @@ menu "Blifi Provisioning"
 
     endmenu
 
+    config BLIFI_FIXED_POP
+        string "Fixed Proof-of-Possession (empty = auto-generate)"
+        default ""
+        help
+            If non-empty, the device uses this exact 8-character Crockford base32
+            PoP (digits 0-9 and A-Z excluding I, L, O, U) instead of generating a
+            random one on first boot and storing it in NVS.
+
+            Validated at build time: a wrong length or an invalid character fails
+            the build. Leave empty (default) to keep the auto-generated,
+            NVS-persisted PoP.
+
+            Note: reusing one PoP across many devices weakens the per-device
+            guarantee; prefer a value that is unique per unit.
+
 endmenu

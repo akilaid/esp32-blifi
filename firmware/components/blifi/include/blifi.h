@@ -79,10 +79,21 @@ typedef struct {
 #define BLIFI_RI_PULSE_DEFAULT    2000
 #endif
 
+/* Kconfig-derived default for a fixed PoP; "" (the Kconfig default) means the PoP
+ * is auto-generated on first boot and persisted in NVS, as before. */
+#ifdef CONFIG_BLIFI_FIXED_POP
+#define BLIFI_FIXED_POP_DEFAULT   CONFIG_BLIFI_FIXED_POP
+#else
+#define BLIFI_FIXED_POP_DEFAULT   ""
+#endif
+
 /** Top-level configuration. Prefer ::BLIFI_DEFAULT_CONFIG. */
 typedef struct {
     const char *device_name;   /*!< BLE name; NULL → "blifi-XXXX" from the MAC */
     bool        require_pop;   /*!< Require Proof-of-Possession (default true) */
+    const char *fixed_pop;     /*!< Non-empty = use this exact 8-char Crockford PoP
+                                    instead of generating one / reading NVS.
+                                    NULL or "" = auto-generate (the default). */
     uint32_t    prov_timeout_ms; /*!< Provisioning window; 0 = no timeout */
     blifi_wifi_manager_config_t wifi; /*!< Wi-Fi retry/backoff config */
     blifi_reset_indicator_config_t reset_indicator; /*!< Hard-reset indicator (§6.2) */
@@ -91,6 +102,7 @@ typedef struct {
 #define BLIFI_DEFAULT_CONFIG() ((blifi_config_t){ \
     .device_name     = NULL,  \
     .require_pop     = true,  \
+    .fixed_pop       = BLIFI_FIXED_POP_DEFAULT, \
     .prov_timeout_ms = 0,     \
     .wifi            = BLIFI_WIFI_MANAGER_DEFAULT_CONFIG(), \
     .reset_indicator = { \

@@ -119,18 +119,22 @@ clean `AUTH_FAILED`.
 ## 7. Proof-of-Possession (PoP) trust model
 
 - **Required by default.** Provisioning cannot complete without the correct PoP.
-  A compile-time **no-PoP build flag** exists for development only; with it the
-  handshake is merely *passively* secure (an active MITM can succeed), so it MUST
-  NOT ship in production. `pop_required` in Device-Info tells the app which mode
-  the device is in.
+  A **no-PoP mode** (the runtime `require_pop=false` config option) exists for
+  development only; with it the handshake is merely *passively* secure (an active
+  MITM can succeed), so it MUST NOT ship in production. `pop_required` in
+  Device-Info tells the app which mode the device is in.
 - **Format:** 8-character **Crockford base32** (~40 bits of entropy, e.g.
   `K7M2QP9X`), generated with the hardware RNG on first boot, stored in NVS, and
   **logged once over UART** for whoever flashes the device. The value is stable
   across reboots until credentials are reset.
 - **Distribution:** the default "read it off serial" model suits hobby/maker use.
-  The PoP source is **swappable** - an OEM can inject a per-device PoP printed on
-  a QR label/sticker without any protocol change. This trust assumption is stated
-  here explicitly so it is never an undocumented default.
+  The PoP source is **swappable** - an integrator can pin a fixed PoP without any
+  protocol change, via `CONFIG_BLIFI_FIXED_POP` (build time, format-validated so a
+  malformed value fails the build) or `blifi_config_t.fixed_pop` (runtime), and
+  print it on a QR label/sticker. The firmware validates the *format* only;
+  choosing a per-device-unique value (vs. one shared PoP that, once learned,
+  provisions every unit) is the integrator's responsibility. This trust assumption
+  is stated here explicitly so it is never an undocumented default.
 - **Online brute-force resistance:** ~40 bits is ample against remote guessing,
   but because GCM gives no inherent rate-limit, the firmware **MUST** limit
   confirmation attempts. Recommended default: **lock provisioning for 30 s after

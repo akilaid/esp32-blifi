@@ -1,6 +1,7 @@
 #include "pop.h"
 
 #include <stdint.h>
+#include <string.h>
 
 #include "esp_random.h"
 
@@ -25,5 +26,18 @@ esp_err_t blifi_pop_generate(char *out, size_t cap)
         out[i] = CROCKFORD[(bits >> shift) & 0x1f];
     }
     out[BLIFI_POP_LEN] = '\0';
+    return ESP_OK;
+}
+
+esp_err_t blifi_pop_validate(const char *pop)
+{
+    if (!pop || strlen(pop) != BLIFI_POP_LEN) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    for (int i = 0; i < BLIFI_POP_LEN; i++) {
+        if (strchr(CROCKFORD, pop[i]) == NULL) {
+            return ESP_ERR_INVALID_ARG;   /* not an uppercase Crockford symbol */
+        }
+    }
     return ESP_OK;
 }
