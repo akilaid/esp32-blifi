@@ -8,6 +8,19 @@ versioned independently under [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.2.0] - 2026-07-25
+
+### Added
+- Fixed (user-defined) Proof-of-Possession. Set an exact 8-character Crockford
+  base32 PoP instead of auto-generating one, two ways:
+  - `CONFIG_BLIFI_FIXED_POP` (menuconfig / `sdkconfig.defaults`), **validated at
+    build time** - a wrong length or an invalid character fails the build.
+  - `blifi_config_t.fixed_pop` at runtime, validated in `blifi_init()` (returns an
+    error on a malformed value).
+  A fixed PoP overrides any NVS-stored value and is not persisted; leaving both
+  unset keeps the auto-generated, NVS-backed PoP (unchanged default).
+- Public `blifi_pop_validate()` and a self-test covering the format rules.
+
 ## [0.1.3] - 2026-07-25
 
 ### Changed

@@ -13,6 +13,7 @@
 #include "crypto.h"
 #include "frame.h"
 #include "messages.h"
+#include "pop.h"
 
 static const char *TAG = "blifi_test";
 
@@ -222,6 +223,18 @@ static void test_json(void)
           "JSON credentials reject empty ssid");
 }
 
+static void test_pop_validate(void)
+{
+    CHECK(blifi_pop_validate("ABCD2345") == ESP_OK, "PoP validate accepts valid");
+    CHECK(blifi_pop_validate("K7M2QP9X") == ESP_OK, "PoP validate accepts valid 2");
+    CHECK(blifi_pop_validate("ABC") != ESP_OK, "PoP validate rejects too short");
+    CHECK(blifi_pop_validate("ABCD23456") != ESP_OK, "PoP validate rejects too long");
+    CHECK(blifi_pop_validate("ILOU2345") != ESP_OK, "PoP validate rejects I/L/O/U");
+    CHECK(blifi_pop_validate("TESTPOP1") != ESP_OK, "PoP validate rejects O (Crockford excludes it)");
+    CHECK(blifi_pop_validate("abcd2345") != ESP_OK, "PoP validate rejects lowercase");
+    CHECK(blifi_pop_validate(NULL) != ESP_OK, "PoP validate rejects NULL");
+}
+
 int blifi_selftest(void)
 {
     g_fail = 0;
@@ -234,6 +247,7 @@ int blifi_selftest(void)
     test_session_roundtrip();
     test_framing();
     test_json();
+    test_pop_validate();
     if (g_fail == 0) {
         ESP_LOGI(TAG, "--- ALL PASSED ---");
     } else {

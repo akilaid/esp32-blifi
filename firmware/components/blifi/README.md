@@ -13,6 +13,47 @@ serial-console demo. Public API is in [`include/blifi.h`](include/blifi.h):
 (software reset), `blifi_get_pop`, and the hard-reset hooks below. Status/events
 are delivered on the `BLIFI_EVENT` esp_event base.
 
+## Proof-of-Possession (PoP)
+
+The PoP is the short code the phone must present to complete provisioning (it is
+mixed into the session key schedule, so a wrong PoP simply cannot derive the keys).
+By default blifi generates a random one on first boot, stores it in the default
+`nvs` partition (so it survives a reset-pin factory reset), and logs it once over
+serial. `blifi_get_pop()` returns it. A PoP is 8 uppercase Crockford base32
+characters (`0-9` and `A-Z` excluding `I, L, O, U`), e.g. `ABCD2345`.
+
+Two knobs on `blifi_config_t`:
+
+- `require_pop` (default `true`) - set `false` only for development; provisioning is
+  then merely passively secure (an active MITM can succeed). Never ship it off.
+- `fixed_pop` - pin the PoP to an exact value instead of auto-generating it.
+
+### Setting a fixed PoP
+
+Use this when you print/QR the code yourself, or want a deterministic value per
+unit. Two ways, both validated against the 8-char Crockford format:
+
+- **Build time (recommended, fails the build on a bad value):** set
+  `CONFIG_BLIFI_FIXED_POP` via menuconfig (**Blifi Provisioning -> Fixed
+  Proof-of-Possession**) or in `sdkconfig.defaults`:
+  ```
+  CONFIG_BLIFI_FIXED_POP="ABCD2345"
+  ```
+  A wrong length or an invalid character stops the build with a clear error.
+- **Runtime:** set the field before `blifi_init()`:
+  ```c
+  blifi_config_t cfg = BLIFI_DEFAULT_CONFIG();
+  cfg.fixed_pop = "ABCD2345";   // validated here; blifi_init() fails if malformed
+  blifi_init(&cfg);
+  ```
+
+A fixed PoP overrides any NVS-stored value and is not persisted. Leave both unset
+(the default) to keep the auto-generated, NVS-backed PoP.
+
+> **Security note:** the format is validated, not the secrecy. Reusing one PoP
+> across many devices means anyone who learns it can provision all of them - prefer
+> a value that is unique per unit.
+
 ## Hard reset (reset-pin factory reset)
 
 Holding a GPIO to its configured level while the ESP32 powers on erases the stored

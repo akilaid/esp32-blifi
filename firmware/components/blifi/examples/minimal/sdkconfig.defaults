@@ -5,6 +5,11 @@ CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
 # HKDF for the session key schedule.
 CONFIG_MBEDTLS_HKDF_C=y
 
+# Fixed Proof-of-Possession (optional). Uncomment to hardcode the PoP instead of
+# auto-generating one; it must be exactly 8 Crockford base32 chars (0-9, A-Z minus
+# I/L/O/U) or the build fails. Left unset here so the example ships no shared PoP.
+# CONFIG_BLIFI_FIXED_POP="ABCD2345"
+
 # BLE via NimBLE. Larger host-task stack: message handling runs there and does
 # crypto + a Wi-Fi scan.
 CONFIG_BT_ENABLED=y
