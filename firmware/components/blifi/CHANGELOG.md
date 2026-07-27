@@ -8,6 +8,22 @@ versioned independently under [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.3.0] - 2026-07-27
+
+### Added
+- `blifi_config_t.manage_nvs` (default `true`): `blifi_init()` now initialises the
+  default NVS partition itself (erasing and retrying once on
+  `ESP_ERR_NVS_NO_FREE_PAGES` / `ESP_ERR_NVS_NEW_VERSION_FOUND`), so applications no
+  longer need to call `nvs_flash_init()`. Set `manage_nvs = false` to keep managing
+  NVS in the application.
+- New [`examples/very-minimal`](examples/very-minimal): the shortest integration -
+  three calls in `app_main()`, no `nvs_flash_init()`.
+
+### Changed
+- The `minimal` and `interactive` examples now set `manage_nvs = false` and keep
+  their own `nvs_flash_init()`, to demonstrate the opt-out.
+- Renamed the `esp-idf-example` example to `interactive`.
+
 ## [0.2.0] - 2026-07-25
 
 ### Added

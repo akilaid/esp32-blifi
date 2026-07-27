@@ -50,6 +50,10 @@ static void on_data_reset(void *arg)
 
 void app_main(void)
 {
+    /* This example manages the default NVS partition itself and tells blifi to
+     * leave it alone (cfg.manage_nvs = false, below). For the shortest possible
+     * integration - where blifi_init() handles NVS for you - see the
+     * "very-minimal" example. */
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
@@ -60,6 +64,7 @@ void app_main(void)
      * 2 s pulse - see sdkconfig.defaults). Override at runtime here if needed:
      *   cfg.reset_indicator.gpio = 4;  cfg.reset_indicator.pulse_ms = 0;      */
     blifi_config_t cfg = BLIFI_DEFAULT_CONFIG();
+    cfg.manage_nvs = false; /* the app initialised NVS above */
 
     blifi_register_data_reset_callback(on_data_reset, NULL); /* before init */
     ESP_ERROR_CHECK(blifi_init(&cfg));

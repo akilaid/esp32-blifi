@@ -5,13 +5,29 @@ provisioning: NimBLE GATT transport, X25519 + AES-256-GCM session security,
 binary framing over JSON payloads, Wi-Fi scan/connect/NVS persistence, and the
 provisioning state machine.
 
-Two runnable examples: [`examples/minimal`](examples/minimal) - the smallest
-integration (~20 lines, incl. reset pin + reset LED, no console) - and
-[`examples/esp-idf-example`](examples/esp-idf-example), an interactive
+Three runnable examples: [`examples/very-minimal`](examples/very-minimal) - the
+shortest integration (three calls, blifi manages NVS for you);
+[`examples/minimal`](examples/minimal) - the smallest integration that also wires
+the reset pin + reset LED (no console); and
+[`examples/interactive`](examples/interactive), an interactive
 serial-console demo. Public API is in [`include/blifi.h`](include/blifi.h):
 `blifi_init` → `blifi_start`, plus `blifi_is_provisioned`, `blifi_reset_credentials`
 (software reset), `blifi_get_pop`, and the hard-reset hooks below. Status/events
 are delivered on the `BLIFI_EVENT` esp_event base.
+
+## NVS initialisation
+
+blifi stores the PoP in the default `nvs` partition, so that partition must be
+initialised before use. By default `blifi_init()` does this for you: with
+`blifi_config_t.manage_nvs = true` (the default) it calls `nvs_flash_init()`,
+erasing and retrying once if the partition is full or from an incompatible
+version. The application therefore does not need to call `nvs_flash_init()` at all
+(see [`examples/very-minimal`](examples/very-minimal)).
+
+Set `manage_nvs = false` if your application initialises and owns the default NVS
+partition itself; blifi then assumes it is already up and never erases it (see
+[`examples/minimal`](examples/minimal)). The Arduino wrapper sets this
+automatically, since the Arduino core brings up NVS.
 
 ## Proof-of-Possession (PoP)
 
