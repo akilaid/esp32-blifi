@@ -151,7 +151,8 @@ static void schedule_retry(void)
     s.backoff_ms = (next > s.cfg.backoff_max_ms) ? s.cfg.backoff_max_ms : (uint32_t)next;
 }
 
-/** Give up: publish the failure and signal that re-provisioning is needed. */
+/** Give up: publish the failure. The provisioning_manager's WIFI_FAILED handler
+ *  returns the device to the provisioning state. */
 static void enter_failed(blifi_status_t status, int reason)
 {
     s.active = false;
@@ -159,7 +160,6 @@ static void enter_failed(blifi_status_t status, int reason)
     esp_timer_stop(s.conn_timer);
     ESP_LOGW(TAG, "giving up: %s", blifi_status_str(status));
     post_event(BLIFI_EVENT_WIFI_FAILED, status, reason, NULL);
-    post_event(BLIFI_EVENT_REPROVISIONING_TRIGGERED, status, reason, NULL);
 }
 
 static void handle_disconnected(uint8_t reason)

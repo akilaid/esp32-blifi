@@ -8,6 +8,34 @@ versioned independently under [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.3.1] - 2026-07-27
+
+### Added
+- The `BLIFI_EVENT` loop now posts the full provisioning lifecycle:
+  `BLIFI_EVENT_STARTED`, `BLIFI_EVENT_BLE_CONNECTED`, and
+  `BLIFI_EVENT_CREDENTIALS_RECEIVED` were declared but never fired; they are now
+  emitted at their call sites, so an on-device consumer (e.g. a status LED) can
+  follow the handshake, not just the Wi-Fi phase.
+- `blifi_config_t.prov_timeout_ms` is now enforced (it was previously ignored).
+  When set to a non-zero value, blifi stops advertising and posts
+  `BLIFI_EVENT_PROV_TIMEOUT` if no BLE central connects within the window. Opt-in;
+  default `0` keeps the previous "no timeout" behaviour.
+
+### Removed
+- `BLIFI_EVENT_REPROVISIONING_TRIGGERED` (a local `esp_event` id). It was posted
+  immediately after `BLIFI_EVENT_WIFI_FAILED` with an identical payload; its one
+  internal action (return to provisioning) now happens inside the `WIFI_FAILED`
+  handler. Subscribe to `BLIFI_EVENT_WIFI_FAILED` instead. No wire-protocol change
+  (these ids are local); no consumer in this repo referenced the removed event.
+
+### Fixed
+- After Wi-Fi is given up on, the device now ensures BLE advertising is running and
+  waits for new credentials, instead of immediately re-attempting the same stored
+  credentials. Previously the give-up path re-armed Wi-Fi, which retried the
+  unchanged (often wrong) credentials in a tight loop; a boot that was already
+  provisioned but could not connect could also be left unreachable for
+  re-provisioning. Credentials are unchanged until the app submits new ones.
+
 ## [0.3.0] - 2026-07-27
 
 ### Added
@@ -101,7 +129,7 @@ First public release on the ESP Component Registry (`akilaid/blifi`).
   reset_credentials/get_pop`).
 - On-device self-tests (`blifi_selftest`, `selftest` command) with RFC 7748 /
   RFC 5869 / AES-GCM known-answer vectors plus session and framing round-trips.
-- Hard reset via reset pin (docs/plan.md §6.1, ADR 0005): the ESP-IDF bootloader
+- Hard reset via reset pin (ADR 0005): the ESP-IDF bootloader
   factory reset erases a dedicated `blifi_nvs` partition (Wi-Fi credentials only)
   when a GPIO is held at boot. New public API `blifi_register_data_reset_callback()`
   and `blifi_was_hard_reset()`, plus the `BLIFI_EVENT_HARD_RESET_TRIGGERED` event,
@@ -110,7 +138,7 @@ First public release on the ESP Component Registry (`akilaid/blifi`).
   the app's `sdkconfig.defaults` (see README). The PoP stays in the default `nvs`
   partition, so it survives a hard reset (printed QR/sticker keeps working).
 
-- Optional hard-reset indicator pin (docs/plan.md §6.2): a `Kconfig.projbuild`
+- Optional hard-reset indicator pin: a `Kconfig.projbuild`
   "Blifi Provisioning → Hard Reset Indicator" menu
   (`CONFIG_BLIFI_RESET_INDICATOR_ENABLE`/`_GPIO`/`_ACTIVE_LEVEL`/`_PULSE_MS`) drives
   a GPIO active when a hard reset is detected, driven from the `hard_reset` module.
