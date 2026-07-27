@@ -1,6 +1,6 @@
 /**
  * @file main.c
- * @brief blifi provisioning demo (Phase 3): BLE provisioning + Wi-Fi.
+ * @brief blifi provisioning demo: BLE provisioning + Wi-Fi.
  *
  * On boot: initialise blifi, log the Proof-of-Possession, and start - connecting
  * to Wi-Fi if provisioned, otherwise advertising over BLE. REPL commands:

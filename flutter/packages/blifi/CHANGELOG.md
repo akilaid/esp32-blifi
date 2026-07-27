@@ -4,6 +4,13 @@ All notable changes to the Flutter package are documented here. Format based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this package is
 versioned independently under [Semantic Versioning](https://semver.org/).
 
+## 0.3.2 - 2026-07-27
+
+Version alignment: bumped to 0.3.2 alongside the ESP-IDF component and Arduino
+library so the monorepo's published artifacts share one version. Only change in
+the Dart package is a documentation-comment cleanup (no functional, API, or
+wire-protocol change).
+
 ## 0.3.1 - 2026-07-27
 
 Version alignment: bumped to 0.3.1 alongside the ESP-IDF component and Arduino

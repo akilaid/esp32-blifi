@@ -1,6 +1,6 @@
 /// Orchestrates the blifi provisioning flow (protocol-spec §8) on top of the
 /// transport and session crypto: handshake, Wi-Fi scan, credential send, status.
-/// The polished public API (Phase 5) wraps this.
+/// The polished public API wraps this.
 library;
 
 // Internal implementation; the documented public API lives in lib/blifi.dart.
