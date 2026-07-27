@@ -1,4 +1,4 @@
-/// Typed exceptions for the blifi provisioning flow (docs/plan.md §8).
+/// Typed exceptions for the blifi provisioning flow.
 ///
 /// All exceptions extend [BlifiException] so callers can catch the whole family,
 /// then branch on the concrete type instead of string-matching.

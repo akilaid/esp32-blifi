@@ -8,6 +8,21 @@ versioned independently under [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.3.2] - 2026-07-27
+
+### Fixed
+- Examples now require the component version they actually build against. All
+  three examples use `cfg.manage_nvs` (added in 0.3.0), but their
+  `main/idf_component.yml` pinned `>=0.1.0`; a registry extract could resolve a
+  pre-0.3.0 component that fails to compile. Raised the floor to `>=0.3.0`.
+  (Monorepo/CI builds were unaffected, since they build via `override_path`.)
+
+### Changed
+- Refreshed stale documentation comments: the `blifi.h` file header no longer
+  describes a "Phase 2, Wi-Fi only" state that no longer exists, and the leftover
+  `(Phase 3)` markers and internal `docs/plan.md` references were removed from the
+  public headers, Kconfig help, and source comments. No code or API change.
+
 ## [0.3.1] - 2026-07-27
 
 ### Added

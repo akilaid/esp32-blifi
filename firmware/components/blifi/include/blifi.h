@@ -2,11 +2,11 @@
  * @file blifi.h
  * @brief Umbrella header for the blifi component and its esp_event event base.
  *
- * BLE-based Wi-Fi provisioning for ESP32. Phase 2 implements the Wi-Fi core
- * (scan/connect/persistence/retry) only; BLE transport, the security handshake,
- * and the provisioning state machine arrive in later phases. The `BLIFI_EVENT`
- * base and its full event list are declared here now so the API is stable; only
- * the Wi-Fi events are posted in Phase 2.
+ * BLE-based Wi-Fi provisioning for ESP32: a NimBLE GATT transport, an encrypted
+ * X25519 + AES-256-GCM provisioning session, and a Wi-Fi station manager
+ * (scan/connect/persistence/retry). A small public API (blifi_init/blifi_start)
+ * drives it, and the `BLIFI_EVENT` esp_event base reports the full provisioning
+ * lifecycle for on-device consumers.
  */
 #pragma once
 
@@ -22,7 +22,7 @@ extern "C" {
 /** blifi event base for the default event loop. */
 ESP_EVENT_DECLARE_BASE(BLIFI_EVENT);
 
-/** Events posted on ::BLIFI_EVENT. Wi-Fi events are live in Phase 2. */
+/** Events posted on ::BLIFI_EVENT, in provisioning-lifecycle order. */
 typedef enum {
     BLIFI_EVENT_STARTED = 0,          /*!< blifi_start() completed */
     BLIFI_EVENT_BLE_CONNECTED,        /*!< A central connected over BLE */
@@ -31,7 +31,7 @@ typedef enum {
     BLIFI_EVENT_WIFI_CONNECTED,       /*!< Online; see ::blifi_event_data_t.ip */
     BLIFI_EVENT_WIFI_FAILED,          /*!< Gave up after retries; back to provisioning. See .status */
     BLIFI_EVENT_PROV_TIMEOUT,         /*!< Provisioning window elapsed (::blifi_config_t.prov_timeout_ms) */
-    BLIFI_EVENT_HARD_RESET_TRIGGERED, /*!< Boot after a reset-pin factory reset (§6.1) */
+    BLIFI_EVENT_HARD_RESET_TRIGGERED, /*!< Boot after a reset-pin factory reset */
 } blifi_event_id_t;
 
 /** Data payload accompanying a ::BLIFI_EVENT post. */
@@ -42,7 +42,7 @@ typedef struct {
 } blifi_event_data_t;
 
 /**
- * Hard-reset indicator pin (optional, docs/plan.md §6.2). Only takes effect when
+ * Hard-reset indicator pin (optional). Only takes effect when
  * the component is built with `CONFIG_BLIFI_RESET_INDICATOR_ENABLE=y`; otherwise
  * the whole feature is compiled out and these fields are ignored. Defaults come
  * from the `Hard Reset Indicator` Kconfig menu; override at runtime here (e.g. via
@@ -104,7 +104,7 @@ typedef struct {
                                     connects within this many ms of advertising.
                                     Re-arm with blifi_start(). 0 = no timeout. */
     blifi_wifi_manager_config_t wifi; /*!< Wi-Fi retry/backoff config */
-    blifi_reset_indicator_config_t reset_indicator; /*!< Hard-reset indicator (§6.2) */
+    blifi_reset_indicator_config_t reset_indicator; /*!< Hard-reset indicator */
 } blifi_config_t;
 
 #define BLIFI_DEFAULT_CONFIG() ((blifi_config_t){ \
@@ -159,8 +159,8 @@ const char *blifi_get_pop(void);
 typedef void (*blifi_data_reset_cb_t)(void *arg);
 
 /**
- * @brief Register an optional app-data reset callback for the hard-reset flow
- *        (§6.1). Call this **before** ::blifi_start (typically right before
+ * @brief Register an optional app-data reset callback for the hard-reset flow.
+ *        Call this **before** ::blifi_start (typically right before
  *        ::blifi_init); ::blifi_start fires it - and posts
  *        ::BLIFI_EVENT_HARD_RESET_TRIGGERED - when this boot follows a hard reset.
  *        Passing NULL clears any registration.

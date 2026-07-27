@@ -1,9 +1,9 @@
 dependencies:
   akilaid/blifi:
-    # Any released version (a real range, not "*") so the registry resolves this
-    # back-dependency cleanly and a component minor bump (e.g. 0.1.x -> 0.2.0)
-    # does not break the example build. `^0.1` would exclude 0.2.0.
-    version: ">=0.1.0"
+    # Floor at 0.3.0: these examples use cfg.manage_nvs (and blifi-managed NVS),
+    # which landed in 0.3.0. An open lower bound (not "*") lets a later component
+    # minor bump resolve cleanly while excluding versions too old to compile.
+    version: ">=0.3.0"
     # Inside the monorepo (and CI) build against the local component; when this
     # example is extracted via `idf.py create-project-from-example`, the path
     # does not exist and the component is fetched from the registry instead.

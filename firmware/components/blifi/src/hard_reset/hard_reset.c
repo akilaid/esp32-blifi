@@ -1,7 +1,8 @@
 /**
  * @file hard_reset.c
- * @brief Detects a bootloader factory reset (reset-pin, §6.1) on the next boot
- *        and dispatches the optional app-data reset callback.
+ * @brief Detects a bootloader factory reset (reset-pin) on the next boot
+ *        and dispatches the optional app-data reset callback. The GPIO reset
+ *        itself is performed by the ESP-IDF bootloader before app_main.
  */
 #include "hard_reset.h"
 #include "blifi.h"
@@ -24,7 +25,7 @@ static bool                  s_was_hard_reset;
 static blifi_data_reset_cb_t s_cb;
 static void                 *s_cb_arg;
 
-/* ----------------------------------------- hard-reset indicator pin (§6.2) */
+/* ----------------------------------------------- hard-reset indicator pin */
 /* Entirely opt-in: the whole feature compiles out when the Kconfig option is off. */
 #if CONFIG_BLIFI_RESET_INDICATOR_ENABLE
 
@@ -138,7 +139,7 @@ void blifi_hard_reset_dispatch(void)
     if (!s_was_hard_reset) {
         return;
     }
-    indicator_assert(); /* §6.2 indicator pin - no-op when compiled out */
+    indicator_assert(); /* indicator pin - no-op when compiled out */
     if (s_cb) {
         ESP_LOGI(TAG, "invoking app data-reset callback");
         s_cb(s_cb_arg);

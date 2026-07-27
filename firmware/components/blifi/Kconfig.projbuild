@@ -6,8 +6,8 @@ menu "Blifi Provisioning"
             bool "Drive a GPIO when a hard reset is detected"
             default n
             help
-                Optional (docs/plan.md §6.2). When enabled, blifi drives a GPIO
-                active on the boot following a reset-pin hard reset (§6.1) - wire
+                Optional. When enabled, blifi drives a GPIO
+                active on the boot following a reset-pin hard reset - wire
                 an LED, relay, or optocoupler to it as a "credentials were wiped"
                 signal, with no application code required.
 

@@ -1,6 +1,6 @@
 /**
  * @file hard_reset.h
- * @brief Internal helpers for the reset-pin hard-reset flow (docs/plan.md §6.1).
+ * @brief Internal helpers for the reset-pin hard-reset flow.
  *
  * The GPIO factory reset itself is handled by the ESP-IDF bootloader (before
  * app_main); this module just detects, on the next boot, that it happened and
@@ -26,13 +26,13 @@ void blifi_hard_reset_init_on_boot(void);
 
 /**
  * @brief If this boot follows a hard reset, drive the optional indicator pin
- *        (§6.2) and invoke the registered app-data reset callback (if any).
+ *        and invoke the registered app-data reset callback (if any).
  *        No-op otherwise.
  */
 void blifi_hard_reset_dispatch(void);
 
 /**
- * @brief Provide the runtime hard-reset indicator config (§6.2). No effect when
+ * @brief Provide the runtime hard-reset indicator config. No effect when
  *        the indicator feature is compiled out. Call before ::blifi_start.
  */
 void blifi_hard_reset_set_indicator(const blifi_reset_indicator_config_t *cfg);

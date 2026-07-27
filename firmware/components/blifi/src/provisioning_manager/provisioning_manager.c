@@ -1,7 +1,7 @@
 /**
  * @file provisioning_manager.c
  * @brief Orchestrates BLE transport + session crypto + wifi_manager and
- *        implements the public blifi API (docs/plan.md §6, protocol-spec §8).
+ *        implements the public blifi API (protocol-spec §8).
  */
 #include "blifi.h"
 
@@ -30,7 +30,7 @@ static const char *TAG = "blifi_prov";
 #define NVS_NS      "blifi"
 #define NVS_KEY_POP "pop"
 /** Dedicated NVS partition for Wi-Fi credentials, erasable by the bootloader
- *  factory reset (§6.1). PoP stays in the default `nvs` partition. */
+ *  factory reset. PoP stays in the default `nvs` partition. */
 #define BLIFI_CREDS_PARTITION "blifi_nvs"
 #define LOCKOUT_FAILS 5
 #define LOCKOUT_US    (30 * 1000 * 1000)
