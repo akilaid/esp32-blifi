@@ -94,6 +94,12 @@ typedef struct {
     const char *fixed_pop;     /*!< Non-empty = use this exact 8-char Crockford PoP
                                     instead of generating one / reading NVS.
                                     NULL or "" = auto-generate (the default). */
+    bool        manage_nvs;    /*!< true (default): blifi_init initialises the default
+                                    NVS partition itself (and erases + retries once if
+                                    it is full or from an incompatible version), so the
+                                    application need not call nvs_flash_init(). Set false
+                                    if the application manages the default NVS partition
+                                    itself; blifi then assumes it is already initialised. */
     uint32_t    prov_timeout_ms; /*!< Provisioning window; 0 = no timeout */
     blifi_wifi_manager_config_t wifi; /*!< Wi-Fi retry/backoff config */
     blifi_reset_indicator_config_t reset_indicator; /*!< Hard-reset indicator (§6.2) */
@@ -103,6 +109,7 @@ typedef struct {
     .device_name     = NULL,  \
     .require_pop     = true,  \
     .fixed_pop       = BLIFI_FIXED_POP_DEFAULT, \
+    .manage_nvs      = true,  \
     .prov_timeout_ms = 0,     \
     .wifi            = BLIFI_WIFI_MANAGER_DEFAULT_CONFIG(), \
     .reset_indicator = { \
@@ -114,9 +121,11 @@ typedef struct {
 })
 
 /**
- * @brief Initialise blifi: Wi-Fi manager, PoP (generated on first boot and
- *        logged once over UART), and the BLE stack. NVS must already be
- *        initialised by the application.
+ * @brief Initialise blifi: the default NVS partition (unless
+ *        ::blifi_config_t.manage_nvs is false), the Wi-Fi manager, the PoP
+ *        (generated on first boot and logged once over UART), and the BLE stack.
+ *        With `manage_nvs` left at its default (true) the application does not
+ *        need to call nvs_flash_init() itself.
  */
 esp_err_t blifi_init(const blifi_config_t *config);
 

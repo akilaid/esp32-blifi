@@ -1,13 +1,15 @@
 # blifi minimal example
 
-The smallest useful blifi integration: BLE Wi-Fi provisioning plus the two
-hardware niceties - a **reset pin** and a **reset LED** - with no console/CLI.
-`app_main()` is ~20 lines; the reset pin and LED are pure configuration
-(`sdkconfig.defaults` + `partitions.csv`), not code.
+BLE Wi-Fi provisioning plus the two hardware niceties - a **reset pin** and a
+**reset LED** - with no console/CLI. The reset pin and LED are pure configuration
+(`sdkconfig.defaults` + `partitions.csv`), not code. This example also manages the
+default NVS partition itself (`cfg.manage_nvs = false` + its own
+`nvs_flash_init()`), to show the opt-out.
 
-For an interactive demo with serial-console commands (`status`, `pop`, `reset`,
-`selftest`), see the sibling
-[`esp-idf-example`](../esp-idf-example).
+For the shortest possible integration - three calls, blifi manages NVS for you -
+see the sibling [`very-minimal`](../very-minimal). For an interactive demo with
+serial-console commands (`status`, `pop`, `reset`, `selftest`), see
+[`interactive`](../interactive).
 
 ## Wiring (optional)
 

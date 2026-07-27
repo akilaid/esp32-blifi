@@ -28,7 +28,7 @@ following the existing numbering.
 
 ```bash
 # Firmware component (via the example project)
-cd firmware/components/blifi/examples/esp-idf-example && idf.py build
+cd firmware/components/blifi/examples/interactive && idf.py build
 
 # Arduino library (PlatformIO)
 cd arduino/Blifi && pio run

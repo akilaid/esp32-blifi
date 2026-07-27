@@ -1,0 +1,27 @@
+# Common ESP32 devkit flash size.
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
+
+# HKDF for the session key schedule.
+CONFIG_MBEDTLS_HKDF_C=y
+
+# Fixed Proof-of-Possession (optional). Uncomment to hardcode the PoP instead of
+# auto-generating one; it must be exactly 8 Crockford base32 chars (0-9, A-Z minus
+# I/L/O/U) or the build fails. Left unset here so the example ships no shared PoP.
+# CONFIG_BLIFI_FIXED_POP="ABCD2345"
+
+# BLE via NimBLE. Larger host-task stack: message handling runs there and does
+# crypto + a Wi-Fi scan.
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE=8192
+
+# Larger app partition (BLE + Wi-Fi + mbedTLS).
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# Keep the Wi-Fi routines in flash instead of IRAM. BLE + Wi-Fi + mbedTLS is tight
+# on the classic ESP32's IRAM (overflows on ESP-IDF 5.x otherwise); this frees ~30 KB
+# at a small Wi-Fi throughput cost. Harmless on chips with more IRAM.
+CONFIG_ESP_WIFI_IRAM_OPT=n
+CONFIG_ESP_WIFI_RX_IRAM_OPT=n

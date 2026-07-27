@@ -22,7 +22,7 @@ mirrors its wire protocol byte-for-byte.
 
 ```bash
 # Firmware (via the example project)
-cd firmware/components/blifi/examples/esp-idf-example && idf.py build flash monitor
+cd firmware/components/blifi/examples/interactive && idf.py build flash monitor
 
 # Demo app (physical Android device with BLE)
 cd flutter/apps/demo_app && flutter run

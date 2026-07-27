@@ -371,12 +371,31 @@ static const char *resolve_creds_partition(void)
     return NULL;
 }
 
+/* Initialise the default NVS partition (holds the PoP). Mirrors the standard
+ * application-side idiom: erase and retry once if the partition is full or was
+ * written by an incompatible NVS version. Skipped when the application opts to
+ * manage NVS itself (cfg.manage_nvs == false). */
+static esp_err_t ensure_default_nvs(void)
+{
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_LOGW(TAG, "default NVS partition needs erase (%s) - erasing",
+                 esp_err_to_name(err));
+        ESP_RETURN_ON_ERROR(nvs_flash_erase(), TAG, "nvs_flash_erase");
+        err = nvs_flash_init();
+    }
+    return err;
+}
+
 esp_err_t blifi_init(const blifi_config_t *config)
 {
     if (s.inited) {
         return ESP_OK;
     }
     s.cfg = config ? *config : (blifi_config_t)BLIFI_DEFAULT_CONFIG();
+    if (s.cfg.manage_nvs) {
+        ESP_RETURN_ON_ERROR(ensure_default_nvs(), TAG, "nvs init");
+    }
     s.cfg.wifi.nvs_partition = resolve_creds_partition();
     blifi_hard_reset_set_indicator(&s.cfg.reset_indicator);
     s.lock = xSemaphoreCreateRecursiveMutex();
