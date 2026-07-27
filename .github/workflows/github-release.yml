@@ -1,0 +1,67 @@
+# Create a GitHub Release (in this repo) when a blifi-v<version> tag is pushed.
+#
+# GitHub attaches the source-code archives ("Source code (zip)" / "(tar.gz)") to
+# every release automatically; this workflow additionally builds the demo app and
+# uploads its APK as a release asset. It runs on the same tag that fires
+# flutter-package-publish, so a normal release (bump the version, merge to main,
+# autotag pushes blifi-v<version>) now also produces a GitHub Release.
+#
+# The APK is the demo app (flutter/apps/demo_app) built with `flutter build apk
+# --release`. That app signs its release build with the Android debug key (see
+# flutter/apps/demo_app/android/app/build.gradle.kts), so no keystore secret is
+# required. The APK is installable for testing but is NOT production-signed; to
+# ship a store-grade artifact, add a real signing config + keystore secret.
+name: github-release
+
+on:
+  push:
+    tags:
+      - 'blifi-v[0-9]+.[0-9]+.[0-9]+*'
+
+concurrency: github-release-${{ github.ref_name }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write # create the release and upload assets
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Build demo app release APK
+        working-directory: flutter/apps/demo_app
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#blifi-v}"
+          flutter pub get
+          flutter build apk --release
+          mkdir -p "${GITHUB_WORKSPACE}/dist"
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             "${GITHUB_WORKSPACE}/dist/blifi-demo-v${version}.apk"
+
+      - name: Create GitHub Release (source archives + demo APK)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          apk="dist/${tag/#blifi-v/blifi-demo-v}.apk"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag exists; refreshing the APK asset."
+            gh release upload "$tag" "$apk" --clobber
+          else
+            gh release create "$tag" \
+              --title "$tag" \
+              --generate-notes \
+              "$apk"
+          fi

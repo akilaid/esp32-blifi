@@ -29,6 +29,36 @@ partition itself; blifi then assumes it is already up and never erases it (see
 [`examples/minimal`](examples/minimal)). The Arduino wrapper sets this
 automatically, since the Arduino core brings up NVS.
 
+## Events
+
+Register a handler on the `BLIFI_EVENT` esp_event base to follow provisioning on
+the device (drive a status LED, gate app logic, etc.). Each post carries a
+`blifi_event_data_t` (`status`, `wifi_reason`, `ip`). The events, in lifecycle
+order:
+
+| Event | When | Payload of note |
+|-------|------|-----------------|
+| `BLIFI_EVENT_STARTED` | `blifi_start()` completed | - |
+| `BLIFI_EVENT_BLE_CONNECTED` | A phone connected over BLE | - |
+| `BLIFI_EVENT_CREDENTIALS_RECEIVED` | Credentials decrypted and accepted | - |
+| `BLIFI_EVENT_WIFI_CONNECTING` | Joining the AP | - |
+| `BLIFI_EVENT_WIFI_CONNECTED` | Online | `ip` |
+| `BLIFI_EVENT_WIFI_FAILED` | Gave up after retries; returns to provisioning | `status`, `wifi_reason` |
+| `BLIFI_EVENT_PROV_TIMEOUT` | Provisioning window elapsed (opt-in, see below) | - |
+| `BLIFI_EVENT_HARD_RESET_TRIGGERED` | Boot after a reset-pin factory reset | - |
+
+This local event loop is separate from the encrypted status channel sent to the
+phone; both carry the matching `blifi_status_t` code where one applies.
+
+### Provisioning timeout (opt-in)
+
+`blifi_config_t.prov_timeout_ms` defaults to `0` (disabled). Set it to a non-zero
+value and, if no BLE central connects within that many milliseconds of
+advertising, blifi posts `BLIFI_EVENT_PROV_TIMEOUT` and **stops advertising** (to
+save power / reduce exposure). The window is cancelled as soon as a phone
+connects. To return to provisioning afterwards, call `blifi_start()` again or
+reboot.
+
 ## Proof-of-Possession (PoP)
 
 The PoP is the short code the phone must present to complete provisioning (it is

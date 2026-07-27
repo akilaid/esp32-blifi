@@ -20,9 +20,9 @@ directly.
 
 ## Before you start
 
-Read [`docs/plan.md`](docs/plan.md) for the architecture and the decisions already
-settled (in [`docs/adr/`](docs/adr/)). New architectural decisions go in a new ADR
-following the existing numbering.
+Read the [`docs/adr/`](docs/adr/) records for the architecture and the decisions
+already settled. New architectural decisions go in a new ADR following the existing
+numbering.
 
 ## Building & testing
 

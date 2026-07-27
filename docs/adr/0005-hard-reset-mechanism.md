@@ -1,14 +1,13 @@
 # ADR 0005 - Hard reset via reset pin
 
 - **Status:** Accepted (2026-07-24)
-- **Related:** [`../plan.md`](../plan.md) §6.1, §12, §13;
-  [`../../firmware/components/blifi/README.md`](../../firmware/components/blifi/README.md)
+- **Related:** [`../../firmware/components/blifi/README.md`](../../firmware/components/blifi/README.md)
 
 ## Context
 
 A provisioned device needs a way back to the unprovisioned state without a serial
 console - for a new owner, or to recover from credentials for a network that no
-longer exists. The requirement (plan §6.1): holding a configurable GPIO while the
+longer exists. The requirement: holding a configurable GPIO while the
 ESP32 powers on clears the stored Wi-Fi credentials, with an optional hook to also
 clear application-defined data, and without the developer hand-rolling GPIO
 polling and debounce.
@@ -28,8 +27,8 @@ small `blifi_nvs` NVS partition, and the bootloader is pointed at only that
 partition (`CONFIG_BOOTLOADER_DATA_FACTORY_RESET="blifi_nvs"`). The default `nvs`
 partition - PHY/RF calibration and the app's own data - is untouched.
 
-**Keep the PoP in the default `nvs` partition (refinement of §6.1).** §6.1's prose
-put "credentials and the PoP" in `blifi_nvs`. We deliberately keep only Wi-Fi
+**Keep the PoP in the default `nvs` partition.** An earlier design put "credentials
+and the PoP" together in `blifi_nvs`. We deliberately keep only Wi-Fi
 credentials there and leave the PoP in the default `nvs` partition, so a hard reset
 does **not** change the PoP. A printed QR/sticker (the app's provisioning workflow)
 therefore keeps working after a factory reset. (This firmware does not persist BLE
@@ -77,6 +76,6 @@ default for a snappier UX; still deliberate enough to avoid accidental triggers)
 - **Erase the default `nvs` partition:** would also wipe PHY calibration, the PoP,
   and unrelated app data - the opposite of "only Wi-Fi credentials." Rejected in
   favour of the dedicated `blifi_nvs` partition.
-- **PoP in `blifi_nvs` (literal §6.1):** a hard reset would regenerate the PoP,
+- **PoP in `blifi_nvs` (the earlier design):** a hard reset would regenerate the PoP,
   breaking any printed QR/sticker. Rejected for this project's QR-based workflow;
   see the refinement above.

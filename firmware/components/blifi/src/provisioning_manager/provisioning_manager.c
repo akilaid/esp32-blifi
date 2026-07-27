@@ -5,6 +5,7 @@
  */
 #include "blifi.h"
 
+#include <inttypes.h>
 #include <string.h>
 
 #include "freertos/FreeRTOS.h"
@@ -47,6 +48,7 @@ static struct {
     bool               established;
     int                fail_count;
     int64_t            lockout_until;
+    esp_timer_handle_t prov_timer;   /*!< Provisioning-window timeout (opt-in) */
     SemaphoreHandle_t  lock;
 } s;
 
@@ -76,6 +78,19 @@ static bool ct_equal(const uint8_t *a, const uint8_t *b, size_t n)
         d |= a[i] ^ b[i];
     }
     return d == 0;
+}
+
+/* Post a local BLIFI_EVENT (the on-device event loop; distinct from the encrypted
+ * status channel to the phone). esp_event_post only queues, so it is safe to call
+ * while holding s.lock. */
+static void post_local(blifi_event_id_t id, blifi_status_t status,
+                       const esp_ip4_addr_t *ip)
+{
+    blifi_event_data_t d = { .status = status };
+    if (ip) {
+        d.ip = *ip;
+    }
+    esp_event_post(BLIFI_EVENT, id, &d, sizeof(d), 0);
 }
 
 /* ------------------------------------------------------------------- PoP */
@@ -240,6 +255,7 @@ static void handle_credentials(uint8_t msg_type, const uint8_t *record, size_t l
     }
     ESP_LOGI(TAG, "credentials received for ssid=\"%s\"", creds.ssid);
     send_status(BLIFI_STATUS_CREDENTIALS_RECEIVED, NULL);
+    post_local(BLIFI_EVENT_CREDENTIALS_RECEIVED, BLIFI_STATUS_CREDENTIALS_RECEIVED, NULL);
     s.state = ST_CONNECTING;
     blifi_wifi_manager_connect(&creds);
 }
@@ -261,6 +277,9 @@ static void ble_on_conn(void *ctx, bool connected)
 {
     LOCK();
     if (connected) {
+        if (s.prov_timer) {
+            esp_timer_stop(s.prov_timer); /* a central arrived: window fulfilled */
+        }
         if (blifi_crypto_session_init(&s.session) == ESP_OK) {
             s.session_active = true;
         }
@@ -268,6 +287,7 @@ static void ble_on_conn(void *ctx, bool connected)
         if (s.state == ST_UNPROV) {
             s.state = ST_PROV;
         }
+        post_local(BLIFI_EVENT_BLE_CONNECTED, BLIFI_STATUS_HANDSHAKE_IN_PROGRESS, NULL);
     } else {
         blifi_crypto_session_free(&s.session);
         s.session_active = false;
@@ -290,12 +310,17 @@ static size_t ble_devinfo(void *ctx, uint8_t *out, size_t cap)
 
 /* --------------------------------------------------- Wi-Fi status bridge */
 
+static void start_ble(void); /* defined below; used by the WIFI_FAILED handler */
+
 static void wifi_event(void *arg, esp_event_base_t base, int32_t id, void *data)
 {
     const blifi_event_data_t *e = data;
     LOCK();
     switch (id) {
     case BLIFI_EVENT_WIFI_CONNECTED:
+        if (s.prov_timer) {
+            esp_timer_stop(s.prov_timer);
+        }
         s.state = ST_CONNECTED;
         blifi_hard_reset_indicator_clear(); /* release a "hold until re-provisioned" indicator */
         send_status(BLIFI_STATUS_WIFI_CONNECTED, &e->ip);
@@ -304,15 +329,37 @@ static void wifi_event(void *arg, esp_event_base_t base, int32_t id, void *data)
         send_status(BLIFI_STATUS_WIFI_CONNECTING, NULL);
         break;
     case BLIFI_EVENT_WIFI_FAILED:
+        /* Gave up after the retry budget. Report to the phone (if a session is
+         * open), return to the provisioning state, and make sure BLE is
+         * advertising so the device can be re-provisioned - on a boot that was
+         * already provisioned, BLE may never have been started. Do NOT re-arm
+         * Wi-Fi: the stored credentials are unchanged, so retrying would just fail
+         * again in a tight loop. A fresh credential submission over BLE reconnects
+         * (the transport re-advertises on disconnect on its own). */
         send_status(e->status, NULL);
-        break;
-    case BLIFI_EVENT_REPROVISIONING_TRIGGERED:
         s.state = ST_PROV;
         UNLOCK();
-        blifi_start(); /* ensure advertising */
+        start_ble(); /* idempotent; ensures advertising without a Wi-Fi retry loop */
         return;
     default:
         break;
+    }
+    UNLOCK();
+}
+
+/* Fires when prov_timeout_ms elapses with no BLE central connected: signal the
+ * timeout and stop advertising. Re-provisioning then needs blifi_start()/reboot. */
+static void prov_timeout_cb(void *arg)
+{
+    (void)arg;
+    LOCK();
+    ESP_LOGW(TAG, "provisioning window elapsed (%" PRIu32 " ms) - stopping advertising",
+             s.cfg.prov_timeout_ms);
+    send_status(BLIFI_STATUS_PROV_TIMEOUT, NULL); /* best-effort (no-op if no session) */
+    post_local(BLIFI_EVENT_PROV_TIMEOUT, BLIFI_STATUS_PROV_TIMEOUT, NULL);
+    if (s.ble_started) {
+        blifi_ble_stop();
+        s.ble_started = false;
     }
     UNLOCK();
 }
@@ -331,6 +378,12 @@ static void start_ble(void)
     };
     if (blifi_ble_start(&c) == ESP_OK) {
         s.ble_started = true;
+        /* Opt-in provisioning window: cancelled when a central connects. */
+        if (s.prov_timer && s.cfg.prov_timeout_ms > 0) {
+            esp_timer_stop(s.prov_timer);
+            esp_timer_start_once(s.prov_timer,
+                                 (uint64_t)s.cfg.prov_timeout_ms * 1000);
+        }
     }
 }
 
@@ -402,6 +455,12 @@ esp_err_t blifi_init(const blifi_config_t *config)
     if (!s.lock) {
         return ESP_ERR_NO_MEM;
     }
+    if (s.cfg.prov_timeout_ms > 0 && !s.prov_timer) {
+        const esp_timer_create_args_t targs = {
+            .callback = prov_timeout_cb, .name = "blifi_prov"
+        };
+        ESP_RETURN_ON_ERROR(esp_timer_create(&targs, &s.prov_timer), TAG, "prov timer");
+    }
     ESP_RETURN_ON_ERROR(blifi_wifi_manager_init(&s.cfg.wifi), TAG, "wifi init");
     ESP_RETURN_ON_ERROR(esp_event_handler_instance_register(
         BLIFI_EVENT, ESP_EVENT_ANY_ID, wifi_event, NULL, NULL), TAG, "evt reg");
@@ -432,6 +491,12 @@ esp_err_t blifi_start(void)
         blifi_event_data_t ev = { .status = BLIFI_STATUS_IDLE };
         esp_event_post(BLIFI_EVENT, BLIFI_EVENT_HARD_RESET_TRIGGERED, &ev, sizeof(ev), 0);
         blifi_hard_reset_dispatch();
+    }
+
+    static bool started_notified;
+    if (!started_notified) {
+        started_notified = true;
+        post_local(BLIFI_EVENT_STARTED, BLIFI_STATUS_IDLE, NULL);
     }
 
     if (blifi_is_provisioned()) {

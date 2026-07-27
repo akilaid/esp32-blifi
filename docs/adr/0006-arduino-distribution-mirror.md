@@ -1,8 +1,7 @@
 # ADR 0006 - Arduino distribution via a generated mirror repo
 
 - **Status:** Accepted (2026-07-24)
-- **Related:** [`../plan.md`](../plan.md) §7, §7.1;
-  [`0003-single-codebase-for-arduino.md`](0003-single-codebase-for-arduino.md);
+- **Related:** [`0003-single-codebase-for-arduino.md`](0003-single-codebase-for-arduino.md);
   [`0004-monorepo-layout.md`](0004-monorepo-layout.md)
 
 ## Context

@@ -4,6 +4,14 @@ All notable changes to the Flutter package are documented here. Format based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this package is
 versioned independently under [Semantic Versioning](https://semver.org/).
 
+## 0.3.1 - 2026-07-27
+
+Version alignment: bumped to 0.3.1 alongside the ESP-IDF component and Arduino
+library so the monorepo's published artifacts share one version. No functional or
+API changes in the Dart package (the component's 0.3.1 change - completing the
+device-side `BLIFI_EVENT` lifecycle - is device-side only; the wire protocol and
+status bytes are unchanged).
+
 ## 0.3.0 - 2026-07-27
 
 Version alignment: bumped to 0.3.0 alongside the ESP-IDF component and Arduino

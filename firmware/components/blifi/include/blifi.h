@@ -24,14 +24,13 @@ ESP_EVENT_DECLARE_BASE(BLIFI_EVENT);
 
 /** Events posted on ::BLIFI_EVENT. Wi-Fi events are live in Phase 2. */
 typedef enum {
-    BLIFI_EVENT_STARTED = 0,          /*!< Component started (Phase 3) */
-    BLIFI_EVENT_BLE_CONNECTED,        /*!< A central connected over BLE (Phase 3) */
+    BLIFI_EVENT_STARTED = 0,          /*!< blifi_start() completed */
+    BLIFI_EVENT_BLE_CONNECTED,        /*!< A central connected over BLE */
     BLIFI_EVENT_CREDENTIALS_RECEIVED, /*!< Credentials received/accepted */
     BLIFI_EVENT_WIFI_CONNECTING,      /*!< Attempting to join the AP */
     BLIFI_EVENT_WIFI_CONNECTED,       /*!< Online; see ::blifi_event_data_t.ip */
-    BLIFI_EVENT_WIFI_FAILED,          /*!< Gave up after retries; see .status */
-    BLIFI_EVENT_PROV_TIMEOUT,         /*!< Provisioning window elapsed (Phase 3) */
-    BLIFI_EVENT_REPROVISIONING_TRIGGERED, /*!< Repeated failure / manual trigger */
+    BLIFI_EVENT_WIFI_FAILED,          /*!< Gave up after retries; back to provisioning. See .status */
+    BLIFI_EVENT_PROV_TIMEOUT,         /*!< Provisioning window elapsed (::blifi_config_t.prov_timeout_ms) */
     BLIFI_EVENT_HARD_RESET_TRIGGERED, /*!< Boot after a reset-pin factory reset (§6.1) */
 } blifi_event_id_t;
 
@@ -100,7 +99,10 @@ typedef struct {
                                     application need not call nvs_flash_init(). Set false
                                     if the application manages the default NVS partition
                                     itself; blifi then assumes it is already initialised. */
-    uint32_t    prov_timeout_ms; /*!< Provisioning window; 0 = no timeout */
+    uint32_t    prov_timeout_ms; /*!< If >0, stop advertising and post
+                                    ::BLIFI_EVENT_PROV_TIMEOUT when no BLE central
+                                    connects within this many ms of advertising.
+                                    Re-arm with blifi_start(). 0 = no timeout. */
     blifi_wifi_manager_config_t wifi; /*!< Wi-Fi retry/backoff config */
     blifi_reset_indicator_config_t reset_indicator; /*!< Hard-reset indicator (§6.2) */
 } blifi_config_t;
