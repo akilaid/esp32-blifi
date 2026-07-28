@@ -305,7 +305,13 @@ esp_err_t blifi_wifi_manager_scan(blifi_wifi_ap_t *out, size_t max, size_t *foun
         return ESP_ERR_INVALID_STATE;
     }
 
-    wifi_scan_config_t scan = { .show_hidden = true, .scan_type = WIFI_SCAN_TYPE_ACTIVE };
+    wifi_scan_config_t scan = {
+        .show_hidden = true,
+        .scan_type = WIFI_SCAN_TYPE_ACTIVE,
+        /* Shorter per-channel dwell than the ~120ms default; still enough to catch
+         * a beacon on each channel. Roughly halves the scan. */
+        .scan_time.active = { .min = 30, .max = 60 },
+    };
     ESP_RETURN_ON_ERROR(esp_wifi_scan_start(&scan, true), TAG, "scan_start");
 
     uint16_t num = 0;
@@ -444,8 +450,13 @@ esp_err_t blifi_wifi_manager_connect(const blifi_wifi_credentials_t *creds)
     wifi_config_t wc = {0};
     strlcpy((char *)wc.sta.ssid, s.creds.ssid, sizeof(wc.sta.ssid));
     strlcpy((char *)wc.sta.password, s.creds.password, sizeof(wc.sta.password));
-    wc.sta.scan_method = WIFI_ALL_CHANNEL_SCAN;
+    /* Fast scan: associate with the first AP matching the SSID instead of
+     * scanning all channels and sorting. No channel is pinned, so an AP that
+     * moved channel is still found. The RSSI floor avoids latching onto a
+     * barely-audible AP when the SSID exists on several. */
+    wc.sta.scan_method = WIFI_FAST_SCAN;
     wc.sta.threshold.authmode = WIFI_AUTH_OPEN; /* accept any auth mode */
+    wc.sta.threshold.rssi = -80;
     wc.sta.pmf_cfg.capable = true;              /* WPA3 compatible */
     if (s.creds.bssid_set) {
         wc.sta.bssid_set = true;

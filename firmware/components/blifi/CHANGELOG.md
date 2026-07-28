@@ -8,7 +8,21 @@ versioned independently under [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
-## [0.4.0] - 2026-07-28
+## [0.5.0] - 2026-07-28
+
+### Changed
+- Faster provisioning, all internal (no API or wire-protocol change):
+  - Wi-Fi connect uses `WIFI_FAST_SCAN` (associate with the first matching AP)
+    instead of scanning every channel first - roughly halves join time. No channel
+    is pinned, so a device still reconnects if the router changes channel; an RSSI
+    floor avoids latching onto a barely-audible AP.
+  - The device now pre-scans Wi-Fi as soon as it starts advertising (when no BLE
+    connection is competing for the radio) and caches the result, so the network
+    list is served to the app instantly instead of after a multi-second scan. The
+    cache is RAM-only (never NVS), holds only public SSID/RSSI/channel data (never
+    credentials), and is zeroed after a successful connection. A connect-time scan
+    remains as a fallback.
+  - Faster BLE advertising interval (~30-50ms) for quicker discovery.
 
 ### Added
 - Opt-in `blifi_config_t.stop_ble_after_provisioning` (default `false`) and the
