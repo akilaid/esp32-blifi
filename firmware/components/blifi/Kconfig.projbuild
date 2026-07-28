@@ -64,4 +64,18 @@ menu "Blifi Provisioning"
             Note: reusing one PoP across many devices weakens the per-device
             guarantee; prefer a value that is unique per unit.
 
+    config BLIFI_STOP_BLE_AFTER_PROVISIONING
+        bool "Stop BLE after successful provisioning"
+        default n
+        help
+            When enabled, blifi tears the BLE stack down once provisioning
+            succeeds and the phone has received the device IP - freeing the
+            NimBLE host RAM and leaving nothing advertising or connectable. The
+            Wi-Fi give-up path still brings BLE back for re-provisioning.
+
+            When disabled (default), BLE stays up after provisioning until the
+            next reboot, exactly as before. This is the compile-time default for
+            blifi_config_t.stop_ble_after_provisioning; it can also be set per
+            call at runtime.
+
 endmenu

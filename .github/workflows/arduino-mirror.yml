@@ -37,7 +37,11 @@ jobs:
           # Copy the CONTENTS of arduino/Blifi/ to the mirror root, deleting stale
           # files. Never touch the mirror's .git; drop the .development marker (its
           # presence blocks Library Manager indexing) and local build output.
-          rsync -a --delete \
+          # --checksum compares by content, not size+mtime: a version bump like
+          # 0.3.0 -> 0.4.0 keeps library.properties the same byte length, which the
+          # default quick-check could skip (leaving the mirror - and its release
+          # tag - stuck on the old version).
+          rsync -a --checksum --delete \
             --exclude '.git/' \
             --exclude '.development' \
             --exclude '.pio/' \

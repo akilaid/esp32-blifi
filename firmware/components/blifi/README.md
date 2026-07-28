@@ -59,6 +59,20 @@ save power / reduce exposure). The window is cancelled as soon as a phone
 connects. To return to provisioning afterwards, call `blifi_start()` again or
 reboot.
 
+### Stop BLE after provisioning (opt-in)
+
+`blifi_config_t.stop_ble_after_provisioning` defaults to `false`, so BLE stays up
+after provisioning (visible and connectable) exactly as before. Set it to `true`
+(or `CONFIG_BLIFI_STOP_BLE_AFTER_PROVISIONING=y`) and, once provisioning succeeds
+and the phone disconnects, blifi tears the whole NimBLE host down - reclaiming its
+RAM and leaving nothing advertising or connectable. A short fallback timeout
+covers a phone that stays connected. The device never drops the link
+mid-notification, so the phone always receives the IP first.
+
+You can also tear BLE down yourself at any time with `blifi_stop_ble()`. Either
+way, the Wi-Fi give-up path re-initialises the BLE host so the device can still be
+re-provisioned if it later cannot reach its network.
+
 ## Proof-of-Possession (PoP)
 
 The PoP is the short code the phone must present to complete provisioning (it is

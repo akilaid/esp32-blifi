@@ -8,7 +8,24 @@ versioned independently under [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
-## [0.3.2] - 2026-07-27
+## [0.4.0] - 2026-07-28
+
+### Added
+- Opt-in `blifi_config_t.stop_ble_after_provisioning` (default `false`) and the
+  `CONFIG_BLIFI_STOP_BLE_AFTER_PROVISIONING` Kconfig default. When enabled, the
+  BLE stack is fully torn down (NimBLE host deinitialised, RAM reclaimed, nothing
+  advertising or connectable) once provisioning succeeds and the phone
+  disconnects, with a short fallback timeout if it lingers. The device never
+  drops the link mid-notification, so the IP is always delivered first. The Wi-Fi
+  give-up path still brings BLE back for re-provisioning.
+- Public `esp_err_t blifi_stop_ble(void)` - tear the BLE stack down on demand
+  (deferred onto a timer task, so it is safe to call from any context, including a
+  blifi callback). A later `blifi_start()` re-initialises the host.
+
+### Notes
+- Default behaviour is unchanged: with the flag off, BLE stays up after
+  provisioning exactly as before. Verified on ESP32-S3 hardware, including the
+  full-teardown then re-init (re-provision) cycle.
 
 ### Fixed
 - Examples now require the component version they actually build against. All

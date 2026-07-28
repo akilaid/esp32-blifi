@@ -41,6 +41,7 @@ class BlifiTransport {
   };
   final _messages = StreamController<TransportMessage>.broadcast();
   final _subs = <StreamSubscription<List<int>>>[];
+  StreamSubscription<BluetoothConnectionState>? _connSub;
   int _mtu = 23;
 
   Stream<TransportMessage> get messages => _messages.stream;
@@ -96,6 +97,15 @@ class BlifiTransport {
       await chr.setNotifyValue(true);
       _subs.add(chr.onValueReceived.listen((v) => _onFrame(c, v)));
     }
+
+    // Detect a link drop (device- or app-initiated). Closing [_messages] on
+    // disconnect signals onDone up the stack; higher layers decide whether it is
+    // a clean end (after wifiConnected) or a failure.
+    _connSub = device.connectionState.listen((s) {
+      if (s == BluetoothConnectionState.disconnected && !_messages.isClosed) {
+        _messages.close();
+      }
+    });
   }
 
   void _onFrame(BlifiChar c, List<int> value) {
@@ -141,10 +151,11 @@ class BlifiTransport {
   }
 
   Future<void> dispose() async {
+    await _connSub?.cancel();
     for (final s in _subs) {
       await s.cancel();
     }
-    await _messages.close();
+    if (!_messages.isClosed) await _messages.close();
     try {
       await device.disconnect();
     } catch (_) {}

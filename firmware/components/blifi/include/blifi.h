@@ -86,6 +86,13 @@ typedef struct {
 #define BLIFI_FIXED_POP_DEFAULT   ""
 #endif
 
+/* Kconfig-derived default for stopping BLE after successful provisioning. */
+#ifdef CONFIG_BLIFI_STOP_BLE_AFTER_PROVISIONING
+#define BLIFI_STOP_BLE_AFTER_PROVISIONING_DEFAULT   true
+#else
+#define BLIFI_STOP_BLE_AFTER_PROVISIONING_DEFAULT   false
+#endif
+
 /** Top-level configuration. Prefer ::BLIFI_DEFAULT_CONFIG. */
 typedef struct {
     const char *device_name;   /*!< BLE name; NULL → "blifi-XXXX" from the MAC */
@@ -103,6 +110,12 @@ typedef struct {
                                     ::BLIFI_EVENT_PROV_TIMEOUT when no BLE central
                                     connects within this many ms of advertising.
                                     Re-arm with blifi_start(). 0 = no timeout. */
+    bool        stop_ble_after_provisioning; /*!< false (default): BLE stays up after
+                                    provisioning succeeds. true: tear the BLE stack
+                                    down once the phone has the IP and disconnects
+                                    (with a short fallback timeout), freeing its RAM
+                                    and closing the attack surface. The re-provision
+                                    path (Wi-Fi give-up) brings BLE back. */
     blifi_wifi_manager_config_t wifi; /*!< Wi-Fi retry/backoff config */
     blifi_reset_indicator_config_t reset_indicator; /*!< Hard-reset indicator */
 } blifi_config_t;
@@ -113,6 +126,7 @@ typedef struct {
     .fixed_pop       = BLIFI_FIXED_POP_DEFAULT, \
     .manage_nvs      = true,  \
     .prov_timeout_ms = 0,     \
+    .stop_ble_after_provisioning = BLIFI_STOP_BLE_AFTER_PROVISIONING_DEFAULT, \
     .wifi            = BLIFI_WIFI_MANAGER_DEFAULT_CONFIG(), \
     .reset_indicator = { \
         .enable       = BLIFI_RI_ENABLE_DEFAULT, \
@@ -139,6 +153,15 @@ esp_err_t blifi_start(void);
 
 /** @brief Stop Wi-Fi and BLE activity. */
 esp_err_t blifi_stop(void);
+
+/**
+ * @brief Tear the BLE stack down (stop advertising, drop any connection, and
+ *        deinitialise the NimBLE host to reclaim its RAM). Safe to call from any
+ *        context - the teardown is deferred onto a timer task. A later
+ *        ::blifi_start (or the Wi-Fi give-up re-provision path) brings BLE back up.
+ *        No-op if BLE is not currently running.
+ */
+esp_err_t blifi_stop_ble(void);
 
 /** @brief True if Wi-Fi credentials are stored. */
 bool blifi_is_provisioned(void);

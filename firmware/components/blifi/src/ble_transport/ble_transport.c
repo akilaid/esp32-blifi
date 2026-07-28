@@ -276,6 +276,34 @@ esp_err_t blifi_ble_stop(void)
     return ESP_OK;
 }
 
+esp_err_t blifi_ble_shutdown(void)
+{
+    /* Stop soliciting and drop the link before tearing the host down. The
+     * DISCONNECT event this may raise re-advertises briefly on the host task;
+     * nimble_port_stop() below then halts it - so callers must not hold any lock
+     * the host task needs (it is joined here). */
+    ble_gap_adv_stop();
+    if (s_conn != BLE_HS_CONN_HANDLE_NONE) {
+        ble_gap_terminate(s_conn, BLE_ERR_REM_USER_CONN_TERM);
+    }
+
+    int rc = nimble_port_stop();   /* signals nimble_port_run() to return + joins host_task */
+    if (rc != 0) {
+        ESP_LOGE(TAG, "nimble_port_stop failed: %d", rc);
+        return ESP_FAIL;
+    }
+    nimble_port_deinit();          /* free the host so blifi_ble_start() can re-init */
+
+    /* Reset transport state so a later blifi_ble_start() is a clean slate. */
+    s_conn = BLE_HS_CONN_HANDLE_NONE;
+    memset(s_handles, 0, sizeof(s_handles));
+    for (int i = 0; i < BLIFI_CH_COUNT; i++) {
+        blifi_reasm_reset(&s_reasm[i]);
+    }
+    ESP_LOGI(TAG, "BLE stack shut down (host deinitialised)");
+    return ESP_OK;
+}
+
 typedef struct {
     uint16_t val_handle;
     esp_err_t err;
