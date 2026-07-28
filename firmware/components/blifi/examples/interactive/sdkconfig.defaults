@@ -24,7 +24,7 @@ CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
 CONFIG_ESP_WIFI_IRAM_OPT=n
 CONFIG_ESP_WIFI_RX_IRAM_OPT=n
 
-# Hard reset (§6.1): hold GPIO13 (D13) to GND for 3 s at boot to erase the
+# Hard reset: hold GPIO13 (D13) to GND for 3 s at boot to erase the
 # blifi_nvs partition (Wi-Fi credentials only). Runs in the bootloader before
 # app_main; the default nvs partition (PoP, app data) is untouched.
 CONFIG_BOOTLOADER_FACTORY_RESET=y

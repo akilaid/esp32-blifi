@@ -23,11 +23,23 @@ class BlifiAuthException implements Exception {
   String toString() => 'BlifiAuthException: $message';
 }
 
-class ProvisioningSession {
+/// The surface [BlifiProvisioningSession] depends on. Extracted so the public
+/// session can be unit-tested with a fake (see `BlifiProvisioningSession.forTest`).
+abstract interface class ProvisioningSessionApi {
+  Stream<StatusMessage> get statusStream;
+  DeviceInfo get deviceInfo;
+  Future<List<WifiNetwork>> scanWifiNetworks();
+  Future<void> sendCredentials(String ssid, String password,
+      {String? bssid, int? channel});
+  Future<void> disconnect();
+}
+
+class ProvisioningSession implements ProvisioningSessionApi {
   ProvisioningSession._(this._transport, this._crypto, this.deviceInfo);
 
   final BlifiTransport _transport;
   final BlifiSession _crypto;
+  @override
   final DeviceInfo deviceInfo;
 
   StreamSubscription<TransportMessage>? _sub;
@@ -37,6 +49,7 @@ class ProvisioningSession {
   Completer<List<WifiNetwork>>? _scan;
 
   /// Live provisioning status updates from the device (after credentials).
+  @override
   Stream<StatusMessage> get statusStream => _status.stream;
 
   static const _timeout = Duration(seconds: 12);
@@ -58,7 +71,12 @@ class ProvisioningSession {
   Future<void> _handshake(String pop) async {
     _devicePubkey = Completer<Uint8List>();
     _confirmed = Completer<void>();
-    _sub = _transport.messages.listen(_onMessage);
+    // onDone fires when the transport closes its message stream, i.e. on a BLE
+    // disconnect. Close our status stream so listeners see a clean end; the
+    // public session decides whether that end is success or failure.
+    _sub = _transport.messages.listen(_onMessage, onDone: () {
+      if (!_status.isClosed) _status.close();
+    });
 
     // 1. Exchange public keys.
     await _transport.send(BlifiChar.handshake, MsgType.hsPubkey, _crypto.appPublicKey);
@@ -111,6 +129,7 @@ class ProvisioningSession {
   }
 
   /// Ask the device to scan for Wi-Fi networks (encrypted round-trip).
+  @override
   Future<List<WifiNetwork>> scanWifiNetworks() async {
     _scan = Completer<List<WifiNetwork>>();
     final rec = await _crypto.encrypt(MsgType.scanRequest, encodeScanRequest());
@@ -119,6 +138,7 @@ class ProvisioningSession {
   }
 
   /// Send Wi-Fi credentials; progress arrives on [statusStream].
+  @override
   Future<void> sendCredentials(String ssid, String password,
       {String? bssid, int? channel}) async {
     final rec = await _crypto.encrypt(
@@ -126,9 +146,10 @@ class ProvisioningSession {
     await _transport.send(BlifiChar.credentials, MsgType.credentials, rec);
   }
 
+  @override
   Future<void> disconnect() async {
     await _sub?.cancel();
-    await _status.close();
+    if (!_status.isClosed) await _status.close();
     await _transport.dispose();
   }
 

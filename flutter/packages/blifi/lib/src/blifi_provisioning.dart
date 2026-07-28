@@ -4,6 +4,7 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 import 'ble/provisioning_session.dart';
@@ -123,22 +124,51 @@ class BlifiProvisioning {
 /// An established, authenticated provisioning session with a device.
 class BlifiProvisioningSession {
   BlifiProvisioningSession._(this._session) {
+    // An internal listener so a completeError below is never an unhandled async
+    // error when the app doesn't call awaitProvisioned(). Real awaiters still get
+    // their own delivery.
+    _provisioned.future.then((_) {}, onError: (_) {});
     _sub = _session.statusStream.listen(
       (msg) {
         final status = _mapStatus(msg);
         if (status.state == ProvisioningState.wifiConnected) {
           _ipAddress = status.ipAddress;
+          if (status.ipAddress != null && !_provisioned.isCompleted) {
+            _provisioned.complete(status.ipAddress!);
+          }
         }
         if (!_controller.isClosed) _controller.add(status);
       },
       onError: (Object e) {
         if (!_controller.isClosed) _controller.addError(_mapError(e));
       },
+      onDone: () {
+        // The link dropped. After wifiConnected this is the expected clean end
+        // (e.g. the device tore BLE down after provisioning); before it, the
+        // session ended prematurely - a failure.
+        if (_ipAddress == null) {
+          if (!_controller.isClosed) {
+            _controller.addError(const BleConnectionException(
+                'disconnected before provisioning completed'));
+          }
+          if (!_provisioned.isCompleted) {
+            _provisioned.completeError(const BleConnectionException(
+                'disconnected before provisioning completed'));
+          }
+        }
+        if (!_controller.isClosed) _controller.close();
+      },
     );
   }
 
-  final ProvisioningSession _session;
+  /// Test-only constructor that injects a fake [ProvisioningSessionApi].
+  @visibleForTesting
+  BlifiProvisioningSession.forTest(ProvisioningSessionApi session)
+      : this._(session);
+
+  final ProvisioningSessionApi _session;
   final _controller = StreamController<ProvisioningStatus>.broadcast();
+  final _provisioned = Completer<String>();
   StreamSubscription<StatusMessage>? _sub;
   String? _ipAddress;
 
@@ -152,10 +182,26 @@ class BlifiProvisioningSession {
       );
 
   /// The device's IP address once connected, otherwise null.
+  ///
+  /// Cached from the last `wifiConnected` status, so it stays readable after the
+  /// device disconnects. This is the last chance to learn the address: once the
+  /// BLE link is gone the device is reachable only over the network.
   String? get ipAddress => _ipAddress;
 
   /// Live provisioning status updates (after [sendCredentials]).
+  ///
+  /// Completes normally (`onDone`) when the link drops after a successful
+  /// `wifiConnected`; if the link drops before success it emits a
+  /// [BleConnectionException] first.
   Stream<ProvisioningStatus> get statusStream => _controller.stream;
+
+  /// Resolves to the device IP when provisioning succeeds, or throws
+  /// [BleConnectionException] if the link drops before that.
+  ///
+  /// A convenience over racing [statusStream] against a disconnect. Note it does
+  /// NOT complete on error *statuses* (e.g. a wrong Wi-Fi password) - the device
+  /// stays connected for a retry, so watch [statusStream] for those.
+  Future<String> awaitProvisioned() => _provisioned.future;
 
   /// Ask the device to scan for nearby Wi-Fi networks (encrypted).
   Future<List<WifiNetwork>> scanWifiNetworks() async {
@@ -182,8 +228,13 @@ class BlifiProvisioningSession {
     }
   }
 
-  /// Disconnect and release resources.
+  /// Disconnect and release resources. Idempotent - safe to call repeatedly
+  /// (e.g. from `dispose()`) and after the link has already dropped.
   Future<void> disconnect() async {
+    if (!_provisioned.isCompleted) {
+      _provisioned.completeError(
+          const BleConnectionException('session disconnected'));
+    }
     await _sub?.cancel();
     if (!_controller.isClosed) await _controller.close();
     await _session.disconnect();

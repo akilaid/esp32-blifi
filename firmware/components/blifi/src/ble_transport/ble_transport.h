@@ -45,8 +45,15 @@ typedef struct {
 /** @brief Start the BLE stack, register the GATT service, and advertise. */
 esp_err_t blifi_ble_start(const blifi_ble_config_t *config);
 
-/** @brief Stop advertising / disconnect and shut the stack down. */
+/** @brief Stop advertising and disconnect. The NimBLE host stays initialised;
+ *         call ::blifi_ble_start again is NOT required to resume advertising. */
 esp_err_t blifi_ble_stop(void);
+
+/** @brief Full teardown: stop advertising, disconnect, and deinitialise the
+ *         NimBLE host (frees its RAM). After this, ::blifi_ble_start must be
+ *         called to bring BLE back. MUST NOT be called from the NimBLE host task
+ *         (it stops and joins that task); call from another task context. */
+esp_err_t blifi_ble_shutdown(void);
 
 /** @brief Frame `payload` and notify it on characteristic `ch` (chunked to MTU). */
 esp_err_t blifi_ble_send(blifi_ble_char_t ch, uint8_t msg_type,

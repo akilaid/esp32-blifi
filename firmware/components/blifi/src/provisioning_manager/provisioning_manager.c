@@ -48,9 +48,18 @@ static struct {
     bool               established;
     int                fail_count;
     int64_t            lockout_until;
-    esp_timer_handle_t prov_timer;   /*!< Provisioning-window timeout (opt-in) */
+    esp_timer_handle_t prov_timer;      /*!< Provisioning-window timeout (opt-in) */
+    esp_timer_handle_t stop_ble_timer;  /*!< Deferred BLE teardown after success (opt-in) */
+    bool               stop_ble_pending;/*!< Provisioning succeeded; BLE teardown is armed */
     SemaphoreHandle_t  lock;
 } s;
+
+/* Fallback: if the phone stays connected after provisioning succeeds, tear BLE
+ * down anyway after this long. The normal trigger is the phone disconnecting. */
+#define BLIFI_STOP_BLE_GRACE_MS  5000
+/* Small delay to move the teardown off the NimBLE host task onto the timer task
+ * (blifi_ble_shutdown() stops and joins the host task, so it must not run on it). */
+#define BLIFI_STOP_BLE_DEFER_MS  50
 
 static uint8_t s_scratch[2048];      /* protected by s.lock */
 static uint8_t s_record[2048 + BLIFI_RECORD_OVERHEAD]; /* protected by s.lock */
@@ -58,6 +67,8 @@ static blifi_wifi_ap_t s_aps[20];
 
 #define LOCK()   xSemaphoreTakeRecursive(s.lock, portMAX_DELAY)
 #define UNLOCK() xSemaphoreGiveRecursive(s.lock)
+
+static void schedule_ble_teardown(uint32_t delay_ms); /* defined below */
 
 static const char *state_str(prov_state_t st)
 {
@@ -292,6 +303,12 @@ static void ble_on_conn(void *ctx, bool connected)
         blifi_crypto_session_free(&s.session);
         s.session_active = false;
         s.established = false;
+        /* If provisioning just succeeded, the phone leaving is our cue to tear
+         * BLE down. Defer off this (host-task) context; the teardown clears
+         * stop_ble_pending, so a disconnect it raises itself won't re-trigger. */
+        if (s.stop_ble_pending) {
+            schedule_ble_teardown(BLIFI_STOP_BLE_DEFER_MS);
+        }
     }
     UNLOCK();
 }
@@ -324,6 +341,15 @@ static void wifi_event(void *arg, esp_event_base_t base, int32_t id, void *data)
         s.state = ST_CONNECTED;
         blifi_hard_reset_indicator_clear(); /* release a "hold until re-provisioned" indicator */
         send_status(BLIFI_STATUS_WIFI_CONNECTED, &e->ip);
+        /* Opt-in: tear BLE down now that the phone has the IP. We do NOT terminate
+         * here (that would drop the IP notification mid-flight); instead we wait
+         * for the phone to disconnect (ble_on_conn), with this fallback in case it
+         * lingers. While connected the device is not advertising, so nothing new
+         * can join in the meantime. */
+        if (s.cfg.stop_ble_after_provisioning && s.ble_started) {
+            s.stop_ble_pending = true;
+            schedule_ble_teardown(BLIFI_STOP_BLE_GRACE_MS);
+        }
         break;
     case BLIFI_EVENT_WIFI_CONNECTING:
         send_status(BLIFI_STATUS_WIFI_CONNECTING, NULL);
@@ -362,6 +388,43 @@ static void prov_timeout_cb(void *arg)
         s.ble_started = false;
     }
     UNLOCK();
+}
+
+/* Runs on the esp_timer task (a safe context to stop/join the NimBLE host).
+ * Fires after provisioning succeeded and either the phone disconnected or the
+ * fallback window elapsed. blifi_ble_shutdown() is called WITHOUT s.lock held: it
+ * joins the host task, which itself may take s.lock (via ble_on_conn on the
+ * DISCONNECT it raises), so holding the lock here would deadlock. */
+static void stop_ble_teardown_cb(void *arg)
+{
+    (void)arg;
+    LOCK();
+    if (!s.stop_ble_pending) {
+        UNLOCK();
+        return;
+    }
+    s.stop_ble_pending = false;
+    bool started = s.ble_started;
+    UNLOCK();
+
+    if (started) {
+        blifi_ble_shutdown();
+        LOCK();
+        s.ble_started = false;
+        UNLOCK();
+        ESP_LOGI(TAG, "provisioned - BLE stack torn down (RAM reclaimed)");
+    }
+}
+
+/* Arm the deferred BLE teardown. Caller may or may not hold s.lock (esp_timer
+ * arming is independent of it). */
+static void schedule_ble_teardown(uint32_t delay_ms)
+{
+    if (!s.stop_ble_timer) {
+        return;
+    }
+    esp_timer_stop(s.stop_ble_timer);
+    esp_timer_start_once(s.stop_ble_timer, (uint64_t)delay_ms * 1000);
 }
 
 static void start_ble(void)
@@ -461,6 +524,12 @@ esp_err_t blifi_init(const blifi_config_t *config)
         };
         ESP_RETURN_ON_ERROR(esp_timer_create(&targs, &s.prov_timer), TAG, "prov timer");
     }
+    if (!s.stop_ble_timer) { /* also used by the public blifi_stop_ble(), so always create */
+        const esp_timer_create_args_t targs = {
+            .callback = stop_ble_teardown_cb, .name = "blifi_stopble"
+        };
+        ESP_RETURN_ON_ERROR(esp_timer_create(&targs, &s.stop_ble_timer), TAG, "stopble timer");
+    }
     ESP_RETURN_ON_ERROR(blifi_wifi_manager_init(&s.cfg.wifi), TAG, "wifi init");
     ESP_RETURN_ON_ERROR(esp_event_handler_instance_register(
         BLIFI_EVENT, ESP_EVENT_ANY_ID, wifi_event, NULL, NULL), TAG, "evt reg");
@@ -522,6 +591,21 @@ esp_err_t blifi_stop(void)
     if (s.ble_started) {
         blifi_ble_stop();
     }
+    return ESP_OK;
+}
+
+esp_err_t blifi_stop_ble(void)
+{
+    LOCK();
+    if (!s.ble_started) {
+        UNLOCK();
+        return ESP_OK; /* nothing to do */
+    }
+    s.stop_ble_pending = true;
+    UNLOCK();
+    /* Deferred so this is safe to call from any context (including a blifi
+     * callback that runs on the NimBLE host task). */
+    schedule_ble_teardown(BLIFI_STOP_BLE_DEFER_MS);
     return ESP_OK;
 }
 

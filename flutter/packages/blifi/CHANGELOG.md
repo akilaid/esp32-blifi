@@ -4,6 +4,21 @@ All notable changes to the Flutter package are documented here. Format based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this package is
 versioned independently under [Semantic Versioning](https://semver.org/).
 
+## 0.4.0 - 2026-07-28
+
+### Added
+- `BlifiProvisioningSession.awaitProvisioned()` - a `Future<String>` that resolves
+  to the device IP on success, or throws `BleConnectionException` if the link drops
+  first. Convenient with firmware that stops BLE after provisioning.
+
+### Changed
+- A BLE disconnect **after** `wifiConnected` is now a clean completion:
+  `statusStream` closes via `onDone` with no error (previously the stream simply
+  hung open - a latent bug). A disconnect **before** success still surfaces a
+  `BleConnectionException`. `ipAddress` stays readable after the link drops.
+- `disconnect()` is now explicitly idempotent (safe to call repeatedly / after the
+  link already dropped).
+
 ## 0.3.2 - 2026-07-27
 
 Version alignment: bumped to 0.3.2 alongside the ESP-IDF component and Arduino

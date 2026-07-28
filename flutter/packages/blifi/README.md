@@ -67,6 +67,9 @@ session.statusStream.listen((s) {
 });
 await session.sendCredentials('HomeWiFi', 'password');
 
+// Or await a single terminal result instead of watching the stream:
+final ip = await session.awaitProvisioned(); // throws if the link drops first
+
 // 5. Done.
 await session.disconnect();
 ```
@@ -74,6 +77,16 @@ await session.disconnect();
 Errors are typed: catch `AuthenticationException` (wrong PoP),
 `WifiConnectionException` (with a `ProvisioningState`), `BleConnectionException`,
 or `ProvisioningTimeoutException` - all subtypes of `BlifiException`.
+
+### After success
+
+A BLE disconnect that follows `wifiConnected` is treated as a **clean end**:
+`statusStream` closes via `onDone` with no error (a disconnect *before* success
+still raises `BleConnectionException`). This matches firmware built with
+stop-BLE-after-provisioning, which drops the link once the phone has the IP.
+`session.ipAddress` stays readable after the link drops - it is your **last chance
+to learn the address**; after this the device is reachable only over the network.
+`disconnect()` is idempotent, so it is safe to call from `dispose()`.
 
 See [`example/`](https://github.com/akilaid/esp32-blifi/tree/main/flutter/packages/blifi/example)
 for a runnable app.
