@@ -73,6 +73,20 @@ You can also tear BLE down yourself at any time with `blifi_stop_ble()`. Either
 way, the Wi-Fi give-up path re-initialises the BLE host so the device can still be
 re-provisioned if it later cannot reach its network.
 
+## Provisioning speed
+
+A few things happen automatically to keep provisioning fast (no configuration):
+
+- **Instant network list.** The moment the device starts advertising - before a
+  phone connects, so the radio is not shared with an active BLE link - it scans
+  for Wi-Fi networks and caches the result. When the app asks for the list it is
+  served from that cache instead of waiting for a fresh scan. The cache is
+  RAM-only (never NVS), holds only public SSID/RSSI/channel data (never
+  credentials), and is cleared after a successful connection.
+- **Fast connect.** Joining the AP uses a fast scan (first matching AP) rather
+  than scanning every channel. No channel is pinned, so the device still connects
+  if the router later changes channel.
+
 ## Proof-of-Possession (PoP)
 
 The PoP is the short code the phone must present to complete provisioning (it is

@@ -195,6 +195,8 @@ static void start_advertising(void)
     struct ble_gap_adv_params adv_params = {0};
     adv_params.conn_mode = BLE_GAP_CONN_MODE_UND;
     adv_params.disc_mode = BLE_GAP_DISC_MODE_GEN;
+    adv_params.itvl_min = 48; /* 30 ms (units of 0.625 ms) - faster discovery */
+    adv_params.itvl_max = 80; /* 50 ms */
     int rc = ble_gap_adv_start(s_own_addr_type, NULL, BLE_HS_FOREVER,
                                &adv_params, gap_event, NULL);
     if (rc != 0 && rc != BLE_HS_EALREADY) {

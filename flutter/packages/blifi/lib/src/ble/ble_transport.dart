@@ -70,6 +70,12 @@ class BlifiTransport {
   /// notification channels.
   Future<void> connect() async {
     await device.connect(timeout: const Duration(seconds: 15));
+    // Ask Android for a fast connection interval (~11-15ms) so the multi-step
+    // handshake completes quickly. Unsupported / no-op on iOS - ignore failures.
+    try {
+      await device.requestConnectionPriority(
+          connectionPriorityRequest: ConnectionPriority.high);
+    } catch (_) {}
     try {
       _mtu = await device.requestMtu(512);
     } catch (_) {

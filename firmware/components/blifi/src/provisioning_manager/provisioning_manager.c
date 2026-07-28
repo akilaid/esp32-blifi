@@ -10,6 +10,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "freertos/task.h"
 
 #include "esp_app_desc.h"
 #include "esp_check.h"
@@ -51,6 +52,13 @@ static struct {
     esp_timer_handle_t prov_timer;      /*!< Provisioning-window timeout (opt-in) */
     esp_timer_handle_t stop_ble_timer;  /*!< Deferred BLE teardown after success (opt-in) */
     bool               stop_ble_pending;/*!< Provisioning succeeded; BLE teardown is armed */
+    /* Pre-scan flags are updated lock-free by prescan_task and polled by
+     * handle_scan_request (which runs while holding s.lock via ble_on_message, so
+     * the task must NOT need the lock to signal completion). volatile keeps the
+     * poll loop re-reading them; a barrier orders s_aps/prescan_n before ready. */
+    volatile bool      prescan_active;  /*!< background Wi-Fi pre-scan task is running */
+    volatile bool      prescan_ready;   /*!< s_aps holds cached pre-scan results */
+    volatile size_t    prescan_n;       /*!< number of cached results in s_aps */
     SemaphoreHandle_t  lock;
 } s;
 
@@ -239,12 +247,31 @@ static void handle_scan_request(uint8_t msg_type, const uint8_t *record, size_t 
     if (blifi_crypto_decrypt(&s.session, msg_type, record, len, pt, sizeof(pt), &ptlen) != ESP_OK) {
         return;
     }
+    /* Prefer the pre-scan that started on connect (it overlapped the handshake).
+     * Wait briefly if it is still finishing; only scan on demand if none is in
+     * flight. s_aps is written by prescan_task and read here only once the task
+     * has finished (prescan_active clears with prescan_ready set), so no lock is
+     * needed around the buffer itself. */
     size_t found = 0;
-    blifi_wifi_manager_scan(s_aps, sizeof(s_aps) / sizeof(s_aps[0]), &found);
+    bool from_cache = false;
+    for (int i = 0; i < 60; i++) { /* up to ~6s; lock-free reads (see struct note) */
+        if (s.prescan_ready) {
+            __sync_synchronize();
+            found = s.prescan_n;
+            from_cache = true;
+            break;
+        }
+        if (!s.prescan_active) { break; }
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+    if (!from_cache) {
+        blifi_wifi_manager_scan(s_aps, sizeof(s_aps) / sizeof(s_aps[0]), &found);
+    }
     size_t n = 0;
     if (blifi_msg_scan_response_encode(s_aps, found, s_scratch, sizeof(s_scratch), &n) == ESP_OK) {
         send_encrypted(BLIFI_CH_SCAN, BLIFI_MSG_SCAN_RESPONSE, s_scratch, n);
-        ESP_LOGI(TAG, "sent %u scan results", (unsigned)found);
+        ESP_LOGI(TAG, "sent %u scan results (%s)", (unsigned)found,
+                 from_cache ? "pre-scan cache" : "on-demand");
     }
 }
 
@@ -267,6 +294,12 @@ static void handle_credentials(uint8_t msg_type, const uint8_t *record, size_t l
     ESP_LOGI(TAG, "credentials received for ssid=\"%s\"", creds.ssid);
     send_status(BLIFI_STATUS_CREDENTIALS_RECEIVED, NULL);
     post_local(BLIFI_EVENT_CREDENTIALS_RECEIVED, BLIFI_STATUS_CREDENTIALS_RECEIVED, NULL);
+    /* If the background pre-scan is still running, let it finish before we
+     * connect - esp_wifi cannot scan and connect at the same time. Almost always
+     * already done (the scan step precedes credentials in the normal flow). */
+    for (int i = 0; i < 60 && s.prescan_active; i++) {
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
     s.state = ST_CONNECTING;
     blifi_wifi_manager_connect(&creds);
 }
@@ -284,6 +317,38 @@ static void ble_on_message(void *ctx, blifi_ble_char_t ch, uint8_t msg_type,
     UNLOCK();
 }
 
+/* Runs on its own task so the (blocking, multi-second) Wi-Fi scan overlaps the
+ * BLE handshake instead of stalling the app after it. Results are cached in s_aps
+ * and served by handle_scan_request. */
+static void prescan_task(void *arg)
+{
+    (void)arg;
+    size_t n = 0;
+    blifi_wifi_manager_scan(s_aps, sizeof(s_aps) / sizeof(s_aps[0]), &n);
+    /* Lock-free signal: publish s_aps + count, then flip ready. No s.lock - the
+     * reader holds it, so taking it here would deadlock. */
+    s.prescan_n = n;
+    __sync_synchronize();
+    s.prescan_ready = true;
+    s.prescan_active = false;
+    ESP_LOGI(TAG, "pre-scan cached %u networks", (unsigned)n);
+    vTaskDelete(NULL);
+}
+
+/* Kick off a background Wi-Fi scan unless one is already running or cached.
+ * Called when advertising starts (best case: the scan finishes before a phone
+ * connects, so the network list is instant) and, as a fallback, on connect. */
+static void start_prescan(void)
+{
+    if (s.prescan_active || s.prescan_ready) {
+        return;
+    }
+    s.prescan_active = true;
+    if (xTaskCreate(prescan_task, "blifi_prescan", 4096, NULL, 5, NULL) != pdPASS) {
+        s.prescan_active = false; /* fall back to an on-demand scan */
+    }
+}
+
 static void ble_on_conn(void *ctx, bool connected)
 {
     LOCK();
@@ -299,10 +364,16 @@ static void ble_on_conn(void *ctx, bool connected)
             s.state = ST_PROV;
         }
         post_local(BLIFI_EVENT_BLE_CONNECTED, BLIFI_STATUS_HANDSHAKE_IN_PROGRESS, NULL);
+        /* Fallback: if the advertising-time scan hasn't already cached results
+         * (e.g. a very fast connect, or a re-advertise after a disconnect), start
+         * one now so it at least overlaps the handshake. Self-guards on
+         * ready/active, so it won't disturb a cache from advertising. */
+        start_prescan();
     } else {
         blifi_crypto_session_free(&s.session);
         s.session_active = false;
         s.established = false;
+        s.prescan_ready = false; /* invalidate cache for the next session */
         /* If provisioning just succeeded, the phone leaving is our cue to tear
          * BLE down. Defer off this (host-task) context; the teardown clears
          * stop_ble_pending, so a disconnect it raises itself won't re-trigger. */
@@ -341,6 +412,12 @@ static void wifi_event(void *arg, esp_event_base_t base, int32_t id, void *data)
         s.state = ST_CONNECTED;
         blifi_hard_reset_indicator_clear(); /* release a "hold until re-provisioned" indicator */
         send_status(BLIFI_STATUS_WIFI_CONNECTED, &e->ip);
+        /* Provisioning done: dispose of the RAM-only pre-scan cache (nearby SSIDs).
+         * The pre-scan task is already finished by now (handle_credentials waits
+         * for it before connecting), so clearing s_aps here is race-free. */
+        s.prescan_ready = false;
+        s.prescan_n = 0;
+        memset(s_aps, 0, sizeof(s_aps));
         /* Opt-in: tear BLE down now that the phone has the IP. We do NOT terminate
          * here (that would drop the IP notification mid-flight); instead we wait
          * for the phone to disconnect (ble_on_conn), with this fallback in case it
@@ -441,6 +518,10 @@ static void start_ble(void)
     };
     if (blifi_ble_start(&c) == ESP_OK) {
         s.ble_started = true;
+        /* Scan now, while only advertising (no BLE connection competing for the
+         * radio), so the network list is cached and ready - usually before a
+         * phone even connects. */
+        start_prescan();
         /* Opt-in provisioning window: cancelled when a central connects. */
         if (s.prov_timer && s.cfg.prov_timeout_ms > 0) {
             esp_timer_stop(s.prov_timer);
